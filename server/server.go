@@ -9,8 +9,8 @@ import (
 	"html/template"
 	"strings"
 
-	"mozilla.org/cas/content"
-	"mozilla.org/cas/ingester"
+	"mozilla.org/crec/content"
+	"mozilla.org/crec/ingester"
 )
 
 // Server to host public API for content consumption

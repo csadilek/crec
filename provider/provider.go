@@ -10,7 +10,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-const registryDir string = "cas-registry"
+const registryDir string = "crec-registry"
 
 // Provider represents a content provider.
 type Provider struct {

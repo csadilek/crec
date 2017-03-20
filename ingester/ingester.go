@@ -2,8 +2,8 @@ package ingester
 
 import (
 	"github.com/mmcdole/gofeed"
-	"mozilla.org/cas/content"
-	"mozilla.org/cas/provider"
+	"mozilla.org/crec/content"
+	"mozilla.org/crec/provider"
 )
 
 // IngestFrom contacts the providers and imports content into the system...

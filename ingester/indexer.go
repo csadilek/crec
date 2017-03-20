@@ -1,6 +1,6 @@
 package ingester
 
-import "mozilla.org/cas/content"
+import "mozilla.org/crec/content"
 import "github.com/blevesearch/bleve"
 import "log"
 
@@ -11,7 +11,7 @@ type Indexer struct {
 	Index      bleve.Index
 }
 
-const path = "cas.bleve"
+const path = "crec.bleve"
 
 // CreateIndexer create an instance of a content indexer
 func CreateIndexer() *Indexer {

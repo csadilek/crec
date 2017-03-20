@@ -1,0 +1,24 @@
+{
+  "description": "Retrieves content recommendations and displays them whenever a new otherwise empty tab is opened",
+  "manifest_version": 2,
+  "name": "CREC",
+  "version": "1.0",
+  "homepage_url": "https://github.com/csadilek/crec/web-ext",
+  "icons": {
+    "48": "icons/content.png"
+  },
+
+  "background": {
+    "scripts": ["crec-background.js"]
+  },
+
+  "chrome_url_overrides" : {
+    "newtab": "/crec.html"
+  },
+
+  "options_ui": {
+    "page": "options.html"
+  },
+
+  "permissions": ["storage", "tabs"]
+}

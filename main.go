@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"mozilla.org/cas/ingester"
-	"mozilla.org/cas/provider"
-	"mozilla.org/cas/server"
+	"mozilla.org/crec/ingester"
+	"mozilla.org/crec/provider"
+	"mozilla.org/crec/server"
 )
 
 func main() {
@@ -40,6 +40,6 @@ func main() {
 	}
 
 	fmt.Println("\nStarting server:")
-	s := server.Server{Addr: ":8080", Path: "/cas/content", Indexer: indexer}
+	s := server.Server{Addr: ":8080", Path: "/crec/content", Indexer: indexer}
 	s.Start()
 }
