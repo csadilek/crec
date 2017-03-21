@@ -92,7 +92,7 @@ func (s *Server) respondWithHTML(w http.ResponseWriter, c []*content.Content) {
 
 	w.Header().Set("Content-Type", "text/html;charset=UTF-8")
 	for _, r := range c {
-		t.Execute(w, &content.RenderedContent{Title: r.Title(), Link: r.Link(), Summary: r.Summary()})
+		t.Execute(w, &r)
 	}
 }
 

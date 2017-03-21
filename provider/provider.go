@@ -18,6 +18,7 @@ type Provider struct {
 	Description string // Details about this provider.
 	URL         string // URL of the content provider.
 	ContentURL  string // URL to retrieve content (TODO need to support pushing content as well)
+	HasImages   bool   // True if images are provided, otherwise false
 }
 
 // GetProviders returns all registered content providers
