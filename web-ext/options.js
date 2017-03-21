@@ -1,36 +1,26 @@
 
-function save(endpoint, tokens) {
-  browser.storage.local.set({
-    crecEndpoint: endpoint,
-    crecTokens: tokens
-  });
-}
-
 function saveForm(e) {
   e.preventDefault();
-  save(document.querySelector("#crec-endpoint").value, document.querySelector("#crec-tokens").value);  
+  browser.runtime.sendMessage({
+    msg: "saveConfig", 
+    endpoint: document.querySelector("#crec-endpoint").value,
+    tokens: document.querySelector("#crec-tokens").value 
+  });  
 }
 
 function restoreOptions() {
-
-  function setOptions(result) {
-    var needsSave = !result.crecEndpoint || !result.crecTokens;
-    var endpoint = result.crecEndpoint || "http://localhost:8080/crec/content";
-    var tokens = result.crecTokens || "Mozilla";
-
-    document.querySelector("#crec-endpoint").value = endpoint;    
-    document.querySelector("#crec-tokens").value = tokens;
-
-    if (needsSave) {
-      save(endpoint, tokens);
-    }
+  function setOptions(result) {    
+    document.querySelector("#crec-endpoint").value = result.endpoint;    
+    document.querySelector("#crec-tokens").value = result.tokens;    
   }  
 
   function onError(error) {
     console.log(`Failed to read crec options: ${error}`);
   }
 
-  browser.storage.local.get(["crecEndpoint", "crecTokens"]).then(setOptions, onError);  
+  browser.runtime.sendMessage({msg: "getConfig"}, function(response) {   
+    setOptions(response)
+  });
 }
 
 document.addEventListener("DOMContentLoaded", restoreOptions);

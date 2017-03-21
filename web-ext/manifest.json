@@ -12,7 +12,7 @@
     "scripts": ["crec-background.js"]
   },
 
-  "chrome_url_overrides" : {
+  "chrome_url_overrides" : {    
     "newtab": "/crec.html"
   },
 
