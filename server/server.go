@@ -26,6 +26,8 @@ func (s *Server) Start() {
 	http.ListenAndServe(s.Addr, nil)
 }
 
+const minPageSize = 5
+
 func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	topic := r.URL.Query().Get("t")
 	format := r.URL.Query().Get("f")
@@ -60,6 +62,12 @@ func (s *Server) fetchContent(topic string, format string, query string) []*cont
 			}
 			return false
 		})
+
+		if len(c) < minPageSize {
+			for _, topic := range splits {
+				c = append(c, s.queryIndexForContent(topic)...)
+			}
+		}
 	} else if query != "" {
 		c = s.queryIndexForContent(query)
 	} else {
