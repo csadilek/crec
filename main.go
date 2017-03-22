@@ -28,7 +28,7 @@ func main() {
 	print("\nAvailable content:\n")
 	tags := make(map[string]bool)
 	for _, c := range indexer.Content {
-		for _, t := range c.Tags() {
+		for _, t := range c.Tags {
 			tags[t] = true
 		}
 		fmt.Println(c)

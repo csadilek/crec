@@ -10,9 +10,10 @@ import (
 	"mozilla.org/crec/provider"
 
 	"github.com/andybalholm/cascadia"
+	"github.com/jaytaylor/html2text"
 )
 
-// IngestFrom contacts the providers and imports content into the system...
+// IngestFrom contacts providers to import content into the system...
 func IngestFrom(providers []*provider.Provider) (*Indexer, error) {
 	c := make([]*content.Content, 0)
 	indexer := CreateIndexer()
@@ -42,13 +43,25 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		return nil, err
 	}
 
+	var id string
+	if item.GUID != "" {
+		id = item.GUID
+	} else {
+		id = item.Link
+	}
+
 	newc := &content.Content{
-		Source:  provider.ID,
-		Title:   item.Title,
-		Link:    item.Link,
-		Image:   findImage(doc),
-		Summary: findSummary(doc, item.Description),
-		Item:    item}
+		ID:        id,
+		Source:    provider.ID,
+		Title:     item.Title,
+		Link:      item.Link,
+		Image:     findImage(doc),
+		Summary:   processSummary(doc),
+		HTML:      item.Description,
+		Tags:      item.Categories,
+		Author:    processAuthor(item),
+		Published: item.Published,
+		Item:      item}
 	return newc, nil
 }
 
@@ -72,6 +85,39 @@ func findImage(node *html.Node) string {
 	return ""
 }
 
-func findSummary(node *html.Node, desc string) string {
-	return desc
+func processSummary(node *html.Node) string {
+	prepareNode(node)
+	text, err := html2text.FromHtmlNode(node)
+	if err != nil {
+		return ""
+	}
+	return text
+}
+
+func prepareNode(n *html.Node) {
+	anchors := findAnchors(n)
+	for _, a := range anchors {
+		n.RemoveChild(a)
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		prepareNode(c)
+	}
+}
+
+func findAnchors(n *html.Node) []*html.Node {
+	anchors := make([]*html.Node, 0)
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.ElementNode && c.Data == "a" {
+			anchors = append(anchors, c)
+		}
+	}
+
+	return anchors
+}
+
+func processAuthor(item *gofeed.Item) string {
+	if item.Author != nil {
+		return item.Author.Name
+	}
+	return ""
 }

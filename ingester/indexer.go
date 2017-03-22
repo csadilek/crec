@@ -32,14 +32,9 @@ func (i *Indexer) Add(c *content.Content) error {
 	if i.ContentMap == nil {
 		i.ContentMap = make(map[string]*content.Content)
 	}
-	var id string
-	if c.Item.GUID != "" {
-		id = c.Item.GUID
-	} else {
-		id = c.Item.Link
-	}
-	i.ContentMap[id] = c
-	return i.Index.Index(id, c.Item.Description)
+
+	i.ContentMap[c.ID] = c
+	return i.Index.Index(c.ID, c.Item.Description)
 }
 
 // Query the index for content

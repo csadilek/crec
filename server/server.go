@@ -34,14 +34,14 @@ func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	acceptHeader := r.Header.Get("Accept")
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := s.fetchContent(topic, format, query)
-
 	if strings.Contains(acceptHeader, "html") && !strings.EqualFold(format, "json") {
 		s.respondWithHTML(w, c)
 	} else if strings.Contains(acceptHeader, "json") || strings.EqualFold(format, "json") {
 		s.respondWithJSON(w, c)
 	} else {
-		log.Println("No acceptable content format found.")
+		log.Println("Invalid format requested.")
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *Server) fetchContent(topic string, format string, query string) []*cont
 		}
 
 		c = content.Filter(s.Indexer.Content, func(c *content.Content) bool {
-			for _, t := range c.Tags() {
+			for _, t := range c.Tags {
 				if _, ok := splitMap[strings.ToLower(t)]; ok {
 					return true
 				}

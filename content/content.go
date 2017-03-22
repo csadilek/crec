@@ -8,22 +8,17 @@ import (
 
 // Content is just a simple wrapper of a gofeed Item for now. More to come...
 type Content struct {
-	Source  string
-	Title   string
-	Link    string
-	Image   string
-	Summary string
-	Item    *gofeed.Item `json:"-"`
-}
-
-// Tags for filtering content items
-func (c *Content) Tags() []string {
-	return c.Item.Categories
-}
-
-// Text of this content item aka the meat.
-func (c *Content) Text() string {
-	return c.Item.Content
+	ID        string       `json:"id,omitempty"`
+	Source    string       `json:"source,omitempty"`
+	Title     string       `json:"title,omitempty"`
+	Link      string       `json:"link,omitempty"`
+	Image     string       `json:"image,omitempty"`
+	Summary   string       `json:"summary,omitempty"`
+	HTML      string       `json:"html,omitempty"`
+	Author    string       `json:"author,omitempty"`
+	Published string       `json:"published,omitempty"`
+	Tags      []string     `json:"tags,omitempty"`
+	Item      *gofeed.Item `json:"-"`
 }
 
 func (c *Content) String() string {

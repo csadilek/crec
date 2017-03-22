@@ -20,5 +20,5 @@
     "page": "options.html"
   },
 
-  "permissions": ["storage", "tabs"]
+  "permissions": ["storage", "tabs", "webRequest", "*://localhost*"]
 }
