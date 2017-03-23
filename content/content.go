@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mmcdole/gofeed"
 )
@@ -34,4 +35,32 @@ func Filter(c []*Content, f func(*Content) bool) []*Content {
 		}
 	}
 	return vsf
+}
+
+// AnyTagFilter retains the content if any tag is present
+func AnyTagFilter(tags map[string]bool) func(*Content) bool {
+	return func(c *Content) bool {
+		for _, t := range c.Tags {
+			if _, ok := tags[strings.ToLower(t)]; ok {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+// AllTagFilter retains the content if all tags are present
+func AllTagFilter(tags map[string]bool) func(*Content) bool {
+	return func(c *Content) bool {
+		tagMap := make(map[string]bool)
+		for _, tag := range c.Tags {
+			tagMap[strings.TrimSpace(tag)] = true
+		}
+		for k := range tags {
+			if _, ok := tagMap[k]; !ok {
+				return false
+			}
+		}
+		return true
+	}
 }

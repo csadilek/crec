@@ -14,11 +14,11 @@ const registryDir string = "crec-registry"
 
 // Provider represents a content provider.
 type Provider struct {
-	ID          string // Unique system-wide identifier of this provider.
-	Description string // Details about this provider.
-	URL         string // URL of the content provider.
-	ContentURL  string // URL to retrieve content (TODO need to support pushing content as well)
-	HasImages   bool   // True if images are provided, otherwise false
+	ID          string   // Unique system-wide identifier of this provider.
+	Description string   // Details about this provider.
+	URL         string   // URL of the content provider.
+	ContentURL  string   // URL to retrieve content (TODO need to support pushing content as well)
+	Categories  []string // Implicit content categories for this provider
 }
 
 // GetProviders returns all registered content providers

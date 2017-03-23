@@ -29,13 +29,13 @@ func (s *Server) Start() {
 const minPageSize = 5
 
 func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
-	topic := r.URL.Query().Get("t")
+	tags := r.URL.Query().Get("t")
 	format := r.URL.Query().Get("f")
 	query := r.URL.Query().Get("q")
 	acceptHeader := r.Header.Get("Accept")
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	c := s.fetchContent(topic, format, query)
+	c := s.fetchContent(tags, format, query)
 	if strings.Contains(acceptHeader, "html") && !strings.EqualFold(format, "json") {
 		s.respondWithHTML(w, c)
 	} else if strings.Contains(acceptHeader, "json") || strings.EqualFold(format, "json") {
@@ -45,27 +45,33 @@ func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) fetchContent(topic string, format string, query string) []*content.Content {
+func (s *Server) fetchContent(tags string, format string, query string) []*content.Content {
 	var c []*content.Content
-	if topic != "" {
-		splits := strings.Split(topic, ",")
-		splitMap := make(map[string]bool)
-		for _, s := range splits {
-			splitMap[strings.ToLower(s)] = true
+	if tags != "" {
+		var tagSplits []string
+		var disjunction = true
+		tagSplits = strings.Split(tags, ",")
+
+		// TODO use a smarter query parser
+		if !strings.Contains(tags, ",") && strings.Contains(tags, " ") {
+			tagSplits = strings.Split(tags, " ")
+			disjunction = false
 		}
 
-		c = content.Filter(s.Indexer.Content, func(c *content.Content) bool {
-			for _, t := range c.Tags {
-				if _, ok := splitMap[strings.ToLower(t)]; ok {
-					return true
-				}
-			}
-			return false
-		})
+		tagMap := make(map[string]bool)
+		for _, s := range tagSplits {
+			tagMap[strings.TrimSpace(strings.ToLower(s))] = true
+		}
+
+		if disjunction {
+			c = content.Filter(s.Indexer.Content, content.AnyTagFilter(tagMap))
+		} else {
+			c = content.Filter(s.Indexer.Content, content.AllTagFilter(tagMap))
+		}
 
 		if len(c) < minPageSize {
-			for _, topic := range splits {
-				c = append(c, s.queryIndexForContent(topic)...)
+			for _, tag := range tagSplits {
+				c = append(c, s.queryIndexForContent(tag)...)
 			}
 		}
 	} else if query != "" {

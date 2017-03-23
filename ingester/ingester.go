@@ -55,17 +55,30 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		Source:    provider.ID,
 		Title:     item.Title,
 		Link:      item.Link,
-		Image:     findImage(doc),
+		Image:     findImage(item, doc),
 		Summary:   processSummary(doc),
 		HTML:      item.Description,
-		Tags:      item.Categories,
+		Tags:      append(item.Categories, provider.Categories...),
 		Author:    processAuthor(item),
 		Published: item.Published,
 		Item:      item}
 	return newc, nil
 }
 
-func findImage(node *html.Node) string {
+func findImage(item *gofeed.Item, node *html.Node) string {
+
+	if item.Image != nil && item.Image.URL != "" {
+		return item.Image.URL
+	}
+
+	contentExt := item.Extensions["media"]["content"]
+	for _, cExt := range contentExt {
+		url := cExt.Attrs["url"]
+		if url != "" {
+			return url
+		}
+	}
+
 	img := cascadia.MustCompile("img").MatchFirst(node)
 	if img != nil {
 		for _, a := range img.Attr {

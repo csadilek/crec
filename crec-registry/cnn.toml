@@ -2,4 +2,3 @@ ID = "cnn-topstories"
 Description = "CNN news feed / Top stories"
 URL = "www.cnn.com"
 ContentURL = "http://rss.cnn.com/rss/cnn_topstories.rss"
-HasImages = false

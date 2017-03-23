@@ -2,4 +2,3 @@ ID = "google-sports"
 Description = "Google news feed"
 URL = "www.google.com"
 ContentURL = "https://news.google.com/?output=rss&topic=s"
-HasImages = true

@@ -2,4 +2,3 @@ ID = "itunes-news"
 Description = "itunes news feed"
 URL = "www.apple.com/itunes"
 ContentURL = "http://www.apple.com/newsroom/rss-feed.rss"
-HasImages = true
