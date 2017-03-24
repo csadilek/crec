@@ -2,6 +2,8 @@ package ingester
 
 import "mozilla.org/crec/content"
 import "github.com/blevesearch/bleve"
+import "github.com/nu7hatch/gouuid"
+import "path/filepath"
 import "log"
 
 // Indexer responsible for indexing content
@@ -11,20 +13,26 @@ type Indexer struct {
 	Index      bleve.Index
 }
 
-const path = "crec.bleve"
+const indexRoot = "index"
+const indexPath = "crec.bleve"
 
 // CreateIndexer create an instance of a content indexer
 func CreateIndexer() *Indexer {
-	index, err := bleve.Open(path)
+	u, err := uuid.NewV4()
+	if err != nil {
+		log.Fatal("Failed to create index directory:", err)
+	}
+	indexPath := filepath.FromSlash(indexRoot + "/" + u.String() + "/" + indexPath)
+	index, err := bleve.Open(indexPath)
 	if err != nil {
 		mapping := bleve.NewIndexMapping()
-		index, err = bleve.New(path, mapping)
+		index, err = bleve.New(indexPath, mapping)
 		if err != nil {
 			log.Fatal("Failed to create index: ", err)
 		}
 	}
 
-	return &Indexer{Content: nil, Index: index}
+	return &Indexer{Content: make([]*content.Content, 0), Index: index}
 }
 
 // Add content to the index
@@ -33,6 +41,7 @@ func (i *Indexer) Add(c *content.Content) error {
 		i.ContentMap = make(map[string]*content.Content)
 	}
 
+	i.Content = append(i.Content, c)
 	i.ContentMap[c.ID] = c
 	return i.Index.Index(c.ID, c.Item.Description)
 }

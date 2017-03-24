@@ -9,31 +9,30 @@ import (
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/provider"
 
+	"log"
+
 	"github.com/andybalholm/cascadia"
 	"github.com/jaytaylor/html2text"
 )
 
 // IngestFrom contacts providers to import content into the system...
-func IngestFrom(providers []*provider.Provider) (*Indexer, error) {
-	c := make([]*content.Content, 0)
+func IngestFrom(providers []*provider.Provider) *Indexer {
 	indexer := CreateIndexer()
 	fp := gofeed.NewParser()
 	for _, provider := range providers {
 		feed, err := fp.ParseURL(provider.ContentURL)
 		if err != nil {
-			return nil, err
+			log.Println("Failed to retrieve content from "+provider.ContentURL, err)
 		}
 		for _, item := range feed.Items {
 			newc, err := createContentFromFeedItem(provider, item)
 			if err != nil {
-				return nil, err
+				log.Println("Failed to process content from "+provider.ContentURL, err)
 			}
 			indexer.Add(newc)
-			c = append(c, newc)
 		}
 	}
-	indexer.Content = c
-	return indexer, nil
+	return indexer
 }
 
 func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (*content.Content, error) {
@@ -66,7 +65,6 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 }
 
 func findImage(item *gofeed.Item, node *html.Node) string {
-
 	if item.Image != nil && item.Image.URL != "" {
 		return item.Image.URL
 	}

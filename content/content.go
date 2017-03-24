@@ -23,7 +23,7 @@ type Content struct {
 }
 
 func (c *Content) String() string {
-	return fmt.Sprintf("%s: %s", c.Source, c.Item.Title)
+	return fmt.Sprintf("%s: %s", c.Source, c.Title)
 }
 
 // Filter the content using the provided predicate function

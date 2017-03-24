@@ -9,19 +9,24 @@ import (
 	"html/template"
 	"strings"
 
+	"unsafe"
+
+	"sync/atomic"
+
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
 )
 
 // Server to host public API for content consumption
 type Server struct {
-	Addr    string            // Address to start server e.g. ":8080"
-	Path    string            // Path to bind handler function e.g. "/content"
-	Indexer *ingester.Indexer // Aavailable content
+	Addr    string         // Address to start server e.g. ":8080"
+	Path    string         // Path to bind handler function e.g. "/content"
+	indexer unsafe.Pointer // Indexer providing access to content
 }
 
 // Start a server to provide an API for content consumption
-func (s *Server) Start() {
+func (s *Server) Start(indexer *ingester.Indexer) {
+	s.SetIndexer(indexer)
 	http.HandleFunc(s.Path, s.contentHandler)
 	http.ListenAndServe(s.Addr, nil)
 }
@@ -64,9 +69,9 @@ func (s *Server) fetchContent(tags string, format string, query string) []*conte
 		}
 
 		if disjunction {
-			c = content.Filter(s.Indexer.Content, content.AnyTagFilter(tagMap))
+			c = content.Filter(s.getIndexer().Content, content.AnyTagFilter(tagMap))
 		} else {
-			c = content.Filter(s.Indexer.Content, content.AllTagFilter(tagMap))
+			c = content.Filter(s.getIndexer().Content, content.AllTagFilter(tagMap))
 		}
 
 		if len(c) < minPageSize {
@@ -76,18 +81,25 @@ func (s *Server) fetchContent(tags string, format string, query string) []*conte
 		}
 	} else if query != "" {
 		c = s.queryIndexForContent(query)
-	} else {
-		c = s.Indexer.Content
 	}
 	return c
 }
 
 func (s *Server) queryIndexForContent(q string) []*content.Content {
-	c, err := s.Indexer.Query(q)
+	c, err := s.getIndexer().Query(q)
 	if err != nil {
 		log.Fatal("Failed to query index:", err)
 	}
 	return c
+}
+
+//SetIndexer atomically updates the server's indexer to reflect updated content
+func (s *Server) SetIndexer(indexer *ingester.Indexer) {
+	atomic.StorePointer(&s.indexer, unsafe.Pointer(indexer))
+}
+
+func (s *Server) getIndexer() *ingester.Indexer {
+	return (*ingester.Indexer)(atomic.LoadPointer(&s.indexer))
 }
 
 func (s *Server) respondWithHTML(w http.ResponseWriter, c []*content.Content) {

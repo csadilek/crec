@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"mozilla.org/crec/ingester"
 	"mozilla.org/crec/provider"
@@ -20,10 +21,7 @@ func main() {
 		fmt.Printf("%+v\n", *prov)
 	}
 
-	indexer, errC := ingester.IngestFrom(providers)
-	if errC != nil {
-		log.Fatal("Failed to ingest content from providers: ", err)
-	}
+	indexer := ingester.IngestFrom(providers)
 
 	print("\nAvailable content:\n")
 	tags := make(map[string]bool)
@@ -39,7 +37,13 @@ func main() {
 		println(k)
 	}
 
-	fmt.Println("\nStarting server:")
-	s := server.Server{Addr: ":8080", Path: "/crec/content", Indexer: indexer}
-	s.Start()
+	s := server.Server{Addr: ":8080", Path: "/crec/content"}
+	ticker := time.NewTicker(time.Minute * 5)
+	go func() {
+		for _ = range ticker.C {
+			indexer := ingester.IngestFrom(providers)
+			s.SetIndexer(indexer)
+		}
+	}()
+	s.Start(indexer)
 }
