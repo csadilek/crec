@@ -40,5 +40,14 @@ browser.runtime.sendMessage({msg: "getConfig"})
             $('#settings-button').click(function(){
                 browser.runtime.openOptionsPage();
             });
+
+            $('#newtab-search-submit').mouseover(function(){            
+                $(this).addClass('submit-hover');
+            });
+            
+            $('#newtab-search-submit').mouseout(function(){
+                $(this).removeClass('submit-hover');
+            });
+            
         });
 });

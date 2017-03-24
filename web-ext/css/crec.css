@@ -34,10 +34,9 @@ body {
     grid-template-columns: repeat(3, 1fr);
     grid-gap: 10px;
 }
-#settings-button {
-    background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 32, 32, 0);
-    height: 38px;
-    width: 38px;
+#settings-button {    
+    height: 32px;
+    width: 32px;
     background-color: #FFFFFF;
     background-repeat: no-repeat;
     background-position: center;
@@ -47,7 +46,12 @@ body {
     margin-right: 35px;
     justify-self: end;
 }
+.settings-hover-off {
+    background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 32, 32, 0);
+}
 .settings-hover {
+    background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 96, 32, 0);
+    -moz-image-region: rect(0, 96, 32, 0) !important;
     box-shadow: 0px 0px 2px grey;
 }
 #newtab-search-form {
@@ -83,17 +87,23 @@ body {
 
 #newtab-search-submit {
     margin-inline-start: -1px;
-    color: transparent;
-    background: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
-    background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go"), linear-gradient(rgb(255, 255, 255, 0.8), rgb(255, 255, 255, 0.1));
+    color: transparent;    
     padding: 0;
     border: 1px solid;    
     border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
     border-radius: 0 2px 2px 0;
-    border-inline-start: 1px solid transparent;
-    box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset, 0 1px 0 hsla(0,0%,100%,.2);
+    border-inline-start: 1px solid transparent;    
     cursor: pointer;
     transition-property: background-color, border-color, box-shadow;
     transition-duration: 150ms;
     width: 50px;
+}
+
+.submit-hover-off {
+    background: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go") center center no-repeat, -webkit-linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
+    box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset, 0 1px 0 hsla(0,0%,100%,.2);
+}
+.submit-hover {
+    background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go-inverted"), linear-gradient(#4cb1ff, #1793e5);
+    box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset, 0 0 0 1px hsla(0,0%,100%,.1) inset, 0 1px 0 hsla(210,54%,20%,.03), 0 0 4px hsla(206,100%,20%,.2);
 }

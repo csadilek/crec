@@ -106,8 +106,8 @@ func processSummary(node *html.Node) string {
 }
 
 func prepareNode(n *html.Node) {
-	anchors := findAnchors(n)
-	for _, a := range anchors {
+	nodes := findNodesToRemove(n)
+	for _, a := range nodes {
 		n.RemoveChild(a)
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
@@ -115,10 +115,10 @@ func prepareNode(n *html.Node) {
 	}
 }
 
-func findAnchors(n *html.Node) []*html.Node {
+func findNodesToRemove(n *html.Node) []*html.Node {
 	anchors := make([]*html.Node, 0)
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.ElementNode && c.Data == "a" {
+		if c.Type == html.ElementNode && (c.Data == "a" || c.Data == "b") {
 			anchors = append(anchors, c)
 		}
 	}
