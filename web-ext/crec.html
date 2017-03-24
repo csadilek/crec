@@ -1,60 +1,11 @@
 <html>
     <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
         <script src="jquery-3.2.0.min.js"></script>
         <script src="jquery.loadTemplate.min.js"></script>
         <script src="crec.js"></script>
-        <style>        
-        .content {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-gap: 10px;
-            grid-auto-rows: minmax(100px, auto);
-            padding: 25px 25px 25px 25px;
-            font: message-box;
-            font-size: 14px;
-            
-        }
-        .image {
-            float: left;
-            padding-right: 10px;                   
-        }
-        .title {
-            display: inline;            
-        }
-        .newtab-cell {
-            background-color: #F9F9F9;
-            border-radius: var(--cell-corner-radius);
-            --cell-corner-radius: 8px;
-            box-shadow: 0 1px 3px #c1c1c1;
-            margin: 10px 10px 25px 10px;
-            padding: 5px 5px 5px 5px;
-        }
-        .hover {             
-            box-shadow: 1px 2px 4px highlight;    
-        }
-        #settings {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-gap: 10px;                                
-        }
-        #settings-button {
-            background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 32, 32, 0);
-            height: 38px;
-            width: 38px;
-            background-color: #FFFFFF;
-            background-repeat: no-repeat;
-            background-position: center;                                   
-            font-size: 28px;
-            color: transparent;                           
-            border: 0px;
-            margin-right: 35px;
-            justify-self: end;          
-        }
-        .settings-hover {            
-            box-shadow: 0px 0px 2px grey;                 
-        }
-
-        </style>
+        <link rel="stylesheet" type="text/css" href="css/crec.css"> 
+              
         <script type="text/html" id="template">            
             <img class="image" data-src="image" data-alt="title" data-link-wrap="link"/>
             <h3 class="title" data-content="title"></h3>
@@ -64,6 +15,15 @@
     </head>
     <body>
         <div id="settings"><div></div><div></div><button id="settings-button"></div>
+        
+        <div id="newtab-search-form">
+            <div id="newtab-search-icon"></div>
+            <input name="q" value="" id="newtab-search-text" aria-label="Search query" maxlength="256" 
+                autocomplete="off" aria-autocomplete="true" aria-controls="searchSuggestionTable" 
+                aria-expanded="false" placeholder="Search" type="text" />
+            <input id="newtab-search-submit" title="Submit search" value="▶" type="button" />        
+        </div>        
+        
         <div id="content" class="content"></div>
     </body>
 </html>

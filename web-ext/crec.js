@@ -17,6 +17,8 @@ browser.runtime.sendMessage({msg: "getConfig"})
                     window.open(o.link, '_blank');
                 });
             });
+        }, function() {
+                console.log("Failed to retrieve content from: " + response.endpoint)
         })
         .then(function() {
             $('.newtab-cell').mouseover(function(){

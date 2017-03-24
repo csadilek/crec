@@ -1,0 +1,99 @@
+body {
+     text-align: center;
+}
+.content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+    padding: 25px 25px 25px 25px;
+    font: message-box;
+    font-size: 14px;
+    text-align: left;         
+}
+.image {
+    float: left;
+    padding-right: 10px;
+}
+.title {
+    display: inline;
+}
+.newtab-cell {
+    background-color: #F9F9F9;
+    border-radius: var(--cell-corner-radius);
+    --cell-corner-radius: 8px;
+    box-shadow: 0 1px 3px #c1c1c1;
+    margin: 10px 10px 25px 10px;
+    padding: 5px 5px 5px 5px;
+}
+.hover {             
+    box-shadow: 1px 2px 4px highlight;    
+}
+#settings {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+}
+#settings-button {
+    background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 32, 32, 0);
+    height: 38px;
+    width: 38px;
+    background-color: #FFFFFF;
+    background-repeat: no-repeat;
+    background-position: center;
+    font-size: 28px;
+    color: transparent;
+    border: 0px;
+    margin-right: 35px;
+    justify-self: end;
+}
+.settings-hover {
+    box-shadow: 0px 0px 2px grey;
+}
+#newtab-search-form {
+    display: -moz-box;
+    height: 36px;
+    width: 600px;
+}
+#newtab-search-icon {
+    border: 1px transparent;
+    padding: 0;
+    margin: 0;
+    width: 36px;
+    height: 36px;
+    background: url("chrome://browser/skin/search-indicator-magnifying-glass.svg") center center no-repeat;
+    position: absolute;
+}
+#newtab-search-text {
+    -moz-box-flex: 1;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-inline-start: 34px;
+    padding-inline-end: 8px;
+    background: hsla(0,0%,100%,.9) padding-box;
+    border: 1px solid;    
+    border-spacing: 0;
+    border-radius: 2px 0 0 2px;
+    border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
+    box-shadow: 0 1px 0 hsla(210,65%,9%,.02) inset, 0 0 2px hsla(210,65%,9%,.1) inset, 0 1px 0 hsla(0,0%,100%,.2);
+    color: inherit;
+    unicode-bidi: plaintext;
+    font-size: 16px;
+}
+
+#newtab-search-submit {
+    margin-inline-start: -1px;
+    color: transparent;
+    background: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go") center center no-repeat, linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1)) padding-box;
+    background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go"), linear-gradient(rgb(255, 255, 255, 0.8), rgb(255, 255, 255, 0.1));
+    padding: 0;
+    border: 1px solid;    
+    border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.17) hsla(210,54%,20%,.2);
+    border-radius: 0 2px 2px 0;
+    border-inline-start: 1px solid transparent;
+    box-shadow: 0 0 2px hsla(0,0%,100%,.5) inset, 0 1px 0 hsla(0,0%,100%,.2);
+    cursor: pointer;
+    transition-property: background-color, border-color, box-shadow;
+    transition-duration: 150ms;
+    width: 50px;
+}
