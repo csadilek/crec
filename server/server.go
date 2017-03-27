@@ -74,6 +74,7 @@ func (s *Server) fetchContent(tags string, format string, query string) []*conte
 			c = content.Filter(s.getIndexer().Content, content.AllTagFilter(tagMap))
 		}
 
+		// Not enough content based on tag matches -> find more using a full-text search
 		if len(c) < minPageSize {
 			for _, tag := range tagSplits {
 				c = append(c, s.queryIndexForContent(tag)...)
@@ -82,7 +83,13 @@ func (s *Server) fetchContent(tags string, format string, query string) []*conte
 	} else if query != "" {
 		c = s.queryIndexForContent(query)
 	}
-	return c
+	return content.Transform(c, func(item *content.Content) *content.Content {
+		// TODO i18n and provide exact matches (this should all be based on a recommendation ext)
+		if tags != "" {
+			item.Explanation = "Selected for users interested in " + tags
+		}
+		return item
+	})
 }
 
 func (s *Server) queryIndexForContent(q string) []*content.Content {
