@@ -2,3 +2,4 @@ ID = "yahoo-news"
 Description = "Yahoo news feed"
 URL = "www.yahoo.com"
 ContentURL = "https://www.yahoo.com/news/rss"
+Processors = ["ExternalLinkRemover"]

@@ -10,7 +10,7 @@ import "log"
 type Indexer struct {
 	Content    []*content.Content
 	ContentMap map[string]*content.Content
-	Index      bleve.Index
+	index      bleve.Index
 }
 
 const indexRoot = "index"
@@ -32,7 +32,7 @@ func CreateIndexer() *Indexer {
 		}
 	}
 
-	return &Indexer{Content: make([]*content.Content, 0), Index: index}
+	return &Indexer{Content: make([]*content.Content, 0), index: index}
 }
 
 // Add content to the index
@@ -43,7 +43,7 @@ func (i *Indexer) Add(c *content.Content) error {
 
 	i.Content = append(i.Content, c)
 	i.ContentMap[c.ID] = c
-	return i.Index.Index(c.ID, c.Item.Description)
+	return i.index.Index(c.ID, c.Item.Description)
 }
 
 // Query the index for content
@@ -52,7 +52,7 @@ func (i *Indexer) Query(q string) ([]*content.Content, error) {
 
 	query := bleve.NewQueryStringQuery(q)
 	searchRequest := bleve.NewSearchRequest(query)
-	searchResult, err := i.Index.Search(searchRequest)
+	searchResult, err := i.index.Search(searchRequest)
 
 	for _, hit := range searchResult.Hits {
 		hitc := i.ContentMap[hit.ID]

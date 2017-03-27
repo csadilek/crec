@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"mozilla.org/crec/ingester"
+	"mozilla.org/crec/processor"
 	"mozilla.org/crec/provider"
 	"mozilla.org/crec/server"
 )
 
 func main() {
+	registry := processor.CreateRegistry()
+
 	providers, err := provider.GetProviders()
 	if err != nil {
 		log.Fatal("Failed to read content provider registry: ", err)
@@ -21,7 +24,7 @@ func main() {
 		fmt.Printf("%+v\n", *prov)
 	}
 
-	indexer := ingester.IngestFrom(providers)
+	indexer := ingester.IngestFrom(providers, registry)
 
 	print("\nAvailable content:\n")
 	tags := make(map[string]bool)
@@ -41,7 +44,7 @@ func main() {
 	ticker := time.NewTicker(time.Minute * 5)
 	go func() {
 		for _ = range ticker.C {
-			indexer := ingester.IngestFrom(providers)
+			indexer := ingester.IngestFrom(providers, registry)
 			s.SetIndexer(indexer)
 		}
 	}()
