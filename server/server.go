@@ -34,19 +34,29 @@ func (s *Server) Start(indexer *ingester.Indexer) {
 const minPageSize = 5
 
 func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
+	if match := r.Header.Get("If-None-Match"); match != "" {
+		if match == s.getIndexer().GetID() {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+	}
+	w.Header().Set("Etag", s.getIndexer().GetID())
+	w.Header().Set("Cache-Control", "max-age=120")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	tags := r.URL.Query().Get("t")
 	format := r.URL.Query().Get("f")
 	query := r.URL.Query().Get("q")
 	acceptHeader := r.Header.Get("Accept")
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	c := s.fetchContent(tags, format, query)
 	if strings.Contains(acceptHeader, "html") && !strings.EqualFold(format, "json") {
 		s.respondWithHTML(w, c)
 	} else if strings.Contains(acceptHeader, "json") || strings.EqualFold(format, "json") {
 		s.respondWithJSON(w, c)
 	} else {
-		log.Println("Invalid format requested.")
+		w.WriteHeader(http.StatusNotAcceptable)
+		w.Write([]byte("Media type" + acceptHeader + " not supported."))
 	}
 }
 
@@ -69,9 +79,9 @@ func (s *Server) fetchContent(tags string, format string, query string) []*conte
 		}
 
 		if disjunction {
-			c = content.Filter(s.getIndexer().Content, content.AnyTagFilter(tagMap))
+			c = content.Filter(s.getIndexer().GetContent(), content.AnyTagFilter(tagMap))
 		} else {
-			c = content.Filter(s.getIndexer().Content, content.AllTagFilter(tagMap))
+			c = content.Filter(s.getIndexer().GetContent(), content.AllTagFilter(tagMap))
 		}
 
 		// Not enough content based on tag matches -> find more using a full-text search

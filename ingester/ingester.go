@@ -12,6 +12,9 @@ import (
 
 	"log"
 
+	"net/http"
+	"time"
+
 	"mozilla.org/crec/processor"
 )
 
@@ -19,12 +22,15 @@ import (
 func IngestFrom(providers []*provider.Provider, registry *processor.Registry) *Indexer {
 	indexer := CreateIndexer()
 	fp := gofeed.NewParser()
+	fp.Client = &http.Client{Timeout: time.Duration(time.Second * 5)}
+
 	for _, provider := range providers {
-		// TODO single solution for ATOM/RSS and JSON providers
 		feed, err := fp.ParseURL(provider.ContentURL)
 		if err != nil {
-			log.Println("Failed to retrieve content from "+provider.ContentURL, err)
+			log.Println("Failed to retrieve for provider "+provider.ID, err)
+			continue
 		}
+
 		for _, item := range feed.Items {
 			newc, err := createContentFromFeedItem(provider, registry, item)
 			if err != nil {

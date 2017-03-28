@@ -14,8 +14,8 @@ type Registry struct {
 	processors map[string]reflect.Type
 }
 
-// CreateRegistry create a new processor registry
-func CreateRegistry() *Registry {
+// GetRegistry create a new processor registry
+func GetRegistry() *Registry {
 	r := &Registry{}
 	r.processors = make(map[string]reflect.Type)
 	r.processors["ExternalLinkRemover"] = reflect.TypeOf(ExternalLinkRemover{})

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
+
+	"fmt"
 
 	"mozilla.org/crec/ingester"
 	"mozilla.org/crec/processor"
@@ -12,41 +13,21 @@ import (
 )
 
 func main() {
-	registry := processor.CreateRegistry()
-
 	providers, err := provider.GetProviders()
 	if err != nil {
 		log.Fatal("Failed to read content provider registry: ", err)
 	}
 
-	print("\nAvailable providers:\n")
-	for _, prov := range providers {
-		fmt.Printf("%+v\n", *prov)
-	}
-
-	indexer := ingester.IngestFrom(providers, registry)
-
-	print("\nAvailable content:\n")
-	tags := make(map[string]bool)
-	for _, c := range indexer.Content {
-		for _, t := range c.Tags {
-			tags[t] = true
-		}
-		fmt.Println(c)
-	}
-
-	fmt.Println("\nAvailable tags:")
-	for k := range tags {
-		println(k)
-	}
+	indexer := ingester.IngestFrom(providers, processor.GetRegistry())
 
 	s := server.Server{Addr: ":8080", Path: "/crec/content"}
 	ticker := time.NewTicker(time.Minute * 5)
 	go func() {
 		for _ = range ticker.C {
-			indexer := ingester.IngestFrom(providers, registry)
+			indexer := ingester.IngestFrom(providers, processor.GetRegistry())
 			s.SetIndexer(indexer)
 		}
 	}()
+	fmt.Printf("Server listening at %s%s\n", s.Path, s.Addr)
 	s.Start(indexer)
 }

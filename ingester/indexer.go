@@ -8,8 +8,9 @@ import "log"
 
 // Indexer responsible for indexing content
 type Indexer struct {
-	Content    []*content.Content
-	ContentMap map[string]*content.Content
+	id         string
+	content    []*content.Content
+	contentMap map[string]*content.Content
 	index      bleve.Index
 }
 
@@ -32,17 +33,17 @@ func CreateIndexer() *Indexer {
 		}
 	}
 
-	return &Indexer{Content: make([]*content.Content, 0), index: index}
+	return &Indexer{id: u.String(), content: make([]*content.Content, 0), index: index}
 }
 
 // Add content to the index
 func (i *Indexer) Add(c *content.Content) error {
-	if i.ContentMap == nil {
-		i.ContentMap = make(map[string]*content.Content)
+	if i.contentMap == nil {
+		i.contentMap = make(map[string]*content.Content)
 	}
 
-	i.Content = append(i.Content, c)
-	i.ContentMap[c.ID] = c
+	i.content = append(i.content, c)
+	i.contentMap[c.ID] = c
 	return i.index.Index(c.ID, c.Item.Description)
 }
 
@@ -55,10 +56,20 @@ func (i *Indexer) Query(q string) ([]*content.Content, error) {
 	searchResult, err := i.index.Search(searchRequest)
 
 	for _, hit := range searchResult.Hits {
-		hitc := i.ContentMap[hit.ID]
+		hitc := i.contentMap[hit.ID]
 		if hitc != nil {
 			c = append(c, hitc)
 		}
 	}
 	return c, err
+}
+
+// GetID returns the unique ID of this indexer
+func (i *Indexer) GetID() string {
+	return i.id
+}
+
+// GetContent returns the indexed content
+func (i *Indexer) GetContent() []*content.Content {
+	return i.content
 }
