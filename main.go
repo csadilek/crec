@@ -18,13 +18,13 @@ func main() {
 		log.Fatal("Failed to read content provider registry: ", err)
 	}
 
-	indexer := ingester.IngestFrom(providers, processor.GetRegistry())
+	indexer := ingester.Ingest(providers, processor.GetRegistry())
 
 	s := server.Server{Addr: ":8080", Path: "/crec/content"}
 	ticker := time.NewTicker(time.Minute * 5)
 	go func() {
 		for _ = range ticker.C {
-			indexer := ingester.IngestFrom(providers, processor.GetRegistry())
+			indexer := ingester.Ingest(providers, processor.GetRegistry())
 			s.SetIndexer(indexer)
 		}
 	}()

@@ -1,6 +1,7 @@
 package ingester
 
 import (
+	"io/ioutil"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -15,31 +16,75 @@ import (
 	"net/http"
 	"time"
 
+	"encoding/json"
+
 	"mozilla.org/crec/processor"
 )
 
-// IngestFrom contacts providers to import content into the system...
-func IngestFrom(providers []*provider.Provider, registry *processor.Registry) *Indexer {
+// Ingest contacts providers to import content into the system...
+func Ingest(providers []*provider.Provider, registry *processor.Registry) *Indexer {
 	indexer := CreateIndexer()
-	fp := gofeed.NewParser()
-	fp.Client = &http.Client{Timeout: time.Duration(time.Second * 5)}
+	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
 
 	for _, provider := range providers {
-		feed, err := fp.ParseURL(provider.ContentURL)
-		if err != nil {
-			log.Println("Failed to retrieve for provider "+provider.ID, err)
-			continue
+		var err error
+		if provider.Native {
+			err = ingestNativeJSON(provider, client, indexer)
+		} else {
+			err = ingestSyndicationFeed(provider, client, indexer, registry)
 		}
-
-		for _, item := range feed.Items {
-			newc, err := createContentFromFeedItem(provider, registry, item)
-			if err != nil {
-				log.Println("Failed to process content from "+provider.ContentURL, err)
-			}
-			indexer.Add(newc)
+		if err != nil {
+			log.Println("Failed to ingest content from provider "+provider.ID, err)
+			continue
 		}
 	}
 	return indexer
+}
+
+func ingestNativeJSON(provider *provider.Provider, client *http.Client, indexer *Indexer) error {
+	resp, err := client.Get(provider.ContentURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var content []content.Content
+	err = json.Unmarshal(body, &content)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range content {
+		indexer.Add(&item)
+	}
+
+	return nil
+}
+
+func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, indexer *Indexer,
+	registry *processor.Registry) error {
+
+	fp := gofeed.NewParser()
+	fp.Client = client
+	feed, err := fp.ParseURL(provider.ContentURL)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range feed.Items {
+		newc, err := createContentFromFeedItem(provider, registry, item)
+		if err != nil {
+			return err
+		}
+		indexer.Add(newc)
+	}
+
+	return nil
 }
 
 func createContentFromFeedItem(provider *provider.Provider, registry *processor.Registry, item *gofeed.Item) (*content.Content, error) {

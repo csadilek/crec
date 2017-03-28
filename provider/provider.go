@@ -17,9 +17,10 @@ type Provider struct {
 	ID          string   // Unique system-wide identifier of this provider.
 	Description string   // Details about this provider.
 	URL         string   // URL of the content provider.
-	ContentURL  string   // URL to retrieve content (TODO need to support pushing content as well)
-	Categories  []string // Implicit content categories for this provider
-	Processors  []string // Chain of content processors, executed in declaration order
+	ContentURL  string   // URL to retrieve content (TODO need to support pushing content as well).``
+	Categories  []string // Implicit content categories for this provider.
+	Processors  []string // Chain of content processors, executed in declaration order.
+	Native      bool     // Native indicates whether or not this provider uses our content format.
 }
 
 // GetProviders returns all registered content providers
