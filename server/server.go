@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"net/url"
 
 	"encoding/json"
 	"log"
@@ -19,19 +20,19 @@ import (
 
 // Server to host public API for content consumption
 type Server struct {
-	Addr    string         // Address to start server e.g. ":8080"
-	Path    string         // Path to bind handler function e.g. "/content"
-	indexer unsafe.Pointer // Indexer providing access to content
+	Addr         string                // Address to start server e.g. ":8080"
+	Path         string                // Path to bind handler function e.g. "/content"
+	indexer      unsafe.Pointer        // Indexer providing access to content
+	recommenders []content.Recommender // Array of available recommenders
 }
 
-// Start a server to provide an API for content consumption
+// Start a server which provides an API for content consumption
 func (s *Server) Start(indexer *ingester.Indexer) {
 	s.SetIndexer(indexer)
+	s.setRecommenders()
 	http.HandleFunc(s.Path, s.contentHandler)
 	http.ListenAndServe(s.Addr, nil)
 }
-
-const minPageSize = 5
 
 func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	if match := r.Header.Get("If-None-Match"); match != "" {
@@ -40,83 +41,43 @@ func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
 	w.Header().Set("Etag", s.getIndexer().GetID())
-	w.Header().Set("Cache-Control", "max-age=120")
+	w.Header().Set("Cache-Control", "max-age=120, must-revalidate")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	tags := r.URL.Query().Get("t")
+	c := s.produceRecommendations(r.URL.Query())
+
 	format := r.URL.Query().Get("f")
-	query := r.URL.Query().Get("q")
 	acceptHeader := r.Header.Get("Accept")
 
-	c := s.fetchContent(tags, format, query)
 	if strings.Contains(acceptHeader, "html") && !strings.EqualFold(format, "json") {
 		s.respondWithHTML(w, c)
-	} else if strings.Contains(acceptHeader, "json") || strings.EqualFold(format, "json") {
+	} else if strings.Contains(acceptHeader, "json") ||
+		strings.HasSuffix(acceptHeader, "*") ||
+		strings.EqualFold(format, "json") {
 		s.respondWithJSON(w, c)
 	} else {
 		w.WriteHeader(http.StatusNotAcceptable)
-		w.Write([]byte("Media type" + acceptHeader + " not supported."))
+		w.Write([]byte("Media type " + acceptHeader + " not supported.\n"))
 	}
 }
 
-func (s *Server) fetchContent(tags string, format string, query string) []*content.Content {
-	var c []*content.Content
-	if tags != "" {
-		var tagSplits []string
-		var disjunction = true
-		tagSplits = strings.Split(tags, ",")
+func (s *Server) produceRecommendations(values url.Values) []*content.Content {
+	params := make(map[string]string)
+	params["tags"] = values.Get("t")
+	params["query"] = values.Get("q")
 
-		// TODO use a smarter query parser
-		if !strings.Contains(tags, ",") && strings.Contains(tags, " ") {
-			tagSplits = strings.Split(tags, " ")
-			disjunction = false
+	c := make([]*content.Content, 0)
+	for _, rec := range s.recommenders {
+		crec, err := rec.Recommend(s.getIndexer().GetContent(), params)
+		if err != nil {
+			log.Println("Recommender problem: ", err)
+			continue
 		}
-
-		tagMap := make(map[string]bool)
-		for _, s := range tagSplits {
-			tagMap[strings.TrimSpace(strings.ToLower(s))] = true
-		}
-
-		if disjunction {
-			c = content.Filter(s.getIndexer().GetContent(), content.AnyTagFilter(tagMap))
-		} else {
-			c = content.Filter(s.getIndexer().GetContent(), content.AllTagFilter(tagMap))
-		}
-
-		// Not enough content based on tag matches -> find more using a full-text search
-		if len(c) < minPageSize {
-			for _, tag := range tagSplits {
-				c = append(c, s.queryIndexForContent(tag)...)
-			}
-		}
-	} else if query != "" {
-		c = s.queryIndexForContent(query)
-	}
-	return content.Transform(c, func(item *content.Content) *content.Content {
-		// TODO i18n and provide exact matches (this should all be based on a recommendation ext)
-		if tags != "" {
-			item.Explanation = "Selected for users interested in " + tags
-		}
-		return item
-	})
-}
-
-func (s *Server) queryIndexForContent(q string) []*content.Content {
-	c, err := s.getIndexer().Query(q)
-	if err != nil {
-		log.Fatal("Failed to query index:", err)
+		c = append(c, crec...)
 	}
 	return c
-}
-
-//SetIndexer atomically updates the server's indexer to reflect updated content
-func (s *Server) SetIndexer(indexer *ingester.Indexer) {
-	atomic.StorePointer(&s.indexer, unsafe.Pointer(indexer))
-}
-
-func (s *Server) getIndexer() *ingester.Indexer {
-	return (*ingester.Indexer)(atomic.LoadPointer(&s.indexer))
 }
 
 func (s *Server) respondWithHTML(w http.ResponseWriter, c []*content.Content) {
@@ -138,4 +99,21 @@ func (s *Server) respondWithJSON(w http.ResponseWriter, c []*content.Content) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)
+}
+
+//SetIndexer atomically updates the server's indexer to reflect updated content
+func (s *Server) SetIndexer(indexer *ingester.Indexer) {
+	atomic.StorePointer(&s.indexer, unsafe.Pointer(indexer))
+}
+
+func (s *Server) getIndexer() *ingester.Indexer {
+	return (*ingester.Indexer)(atomic.LoadPointer(&s.indexer))
+}
+
+func (s *Server) setRecommenders() {
+	tagBasedRecommender := &content.TagBasedRecommender{}
+	queryBasedRecommender := &content.QueryBasedRecommender{
+		Search: func(q string) ([]*content.Content, error) { return s.getIndexer().Query(q) }}
+
+	s.recommenders = []content.Recommender{tagBasedRecommender, queryBasedRecommender}
 }

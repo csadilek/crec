@@ -36,7 +36,7 @@ func CreateIndexer() *Indexer {
 	return &Indexer{id: u.String(), content: make([]*content.Content, 0), index: index}
 }
 
-// Add content to the index
+// Add content to index
 func (i *Indexer) Add(c *content.Content) error {
 	if i.contentMap == nil {
 		i.contentMap = make(map[string]*content.Content)
@@ -47,7 +47,7 @@ func (i *Indexer) Add(c *content.Content) error {
 	return i.index.Index(c.ID, c.Item.Description)
 }
 
-// Query the index for content
+// Query index for content
 func (i *Indexer) Query(q string) ([]*content.Content, error) {
 	c := make([]*content.Content, 0)
 

@@ -15,7 +15,7 @@ import (
 func main() {
 	providers, err := provider.GetProviders()
 	if err != nil {
-		log.Fatal("Failed to read content provider registry: ", err)
+		log.Fatal("Failed to read from content provider registry: ", err)
 	}
 
 	indexer := ingester.Ingest(providers, processor.GetRegistry())
