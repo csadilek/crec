@@ -14,6 +14,8 @@ import (
 
 	"sync/atomic"
 
+	"io/ioutil"
+
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
 )
@@ -22,6 +24,7 @@ import (
 type Server struct {
 	Addr         string                // Address to start server e.g. ":8080"
 	Path         string                // Path to bind handler function e.g. "/content"
+	ImportPath   string                // Path to bind import handler function e.g. "/import".
 	indexer      unsafe.Pointer        // Indexer providing access to content
 	recommenders []content.Recommender // Array of available recommenders
 }
@@ -30,8 +33,29 @@ type Server struct {
 func (s *Server) Start(indexer *ingester.Indexer) {
 	s.SetIndexer(indexer)
 	s.setRecommenders()
+	http.HandleFunc(s.ImportPath, s.importContentHandler)
 	http.HandleFunc(s.Path, s.contentHandler)
 	http.ListenAndServe(s.Addr, nil)
+}
+
+func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO API key and auth mechanism
+	content, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to read body of request.\n"))
+		return
+	}
+
+	provider := r.URL.Query().Get("provider")
+	err = ingester.Queue(content, provider)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to enqueue content for indexing.\n"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,4 @@
+ID = "push-example"
+Description = "Push Example config"
+URL = "http://mozilla.org/"
+Processors = ["ExternalLinkRemover"]

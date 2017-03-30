@@ -5,6 +5,7 @@ import "github.com/blevesearch/bleve"
 import "github.com/nu7hatch/gouuid"
 import "path/filepath"
 import "log"
+import "os"
 
 // Indexer responsible for indexing content
 type Indexer struct {
@@ -36,6 +37,12 @@ func CreateIndexer() *Indexer {
 	return &Indexer{id: u.String(), content: make([]*content.Content, 0), index: index}
 }
 
+// RemoveAllIndexes deletes all existing indexes
+func RemoveAllIndexes() error {
+	err := os.RemoveAll(indexRoot)
+	return err
+}
+
 // Add content to index
 func (i *Indexer) Add(c *content.Content) error {
 	if i.contentMap == nil {
@@ -44,7 +51,7 @@ func (i *Indexer) Add(c *content.Content) error {
 
 	i.content = append(i.content, c)
 	i.contentMap[c.ID] = c
-	return i.index.Index(c.ID, c.Item.Description)
+	return i.index.Index(c.ID, c.Summary)
 }
 
 // Query index for content

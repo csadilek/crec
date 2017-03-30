@@ -13,6 +13,11 @@ import (
 )
 
 func main() {
+	err := ingester.RemoveAllIndexes()
+	if err != nil {
+		log.Println("Failed to delete old indexes on startup: ", err)
+	}
+
 	providers, err := provider.GetProviders()
 	if err != nil {
 		log.Fatal("Failed to read from content provider registry: ", err)
@@ -20,7 +25,7 @@ func main() {
 
 	indexer := ingester.Ingest(providers, processor.GetRegistry())
 
-	s := server.Server{Addr: ":8080", Path: "/crec/content"}
+	s := server.Server{Addr: ":8080", Path: "/crec/content", ImportPath: "/crec/import"}
 	ticker := time.NewTicker(time.Minute * 5)
 	go func() {
 		for _ = range ticker.C {

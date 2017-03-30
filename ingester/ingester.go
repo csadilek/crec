@@ -2,6 +2,8 @@ package ingester
 
 import (
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -21,6 +23,8 @@ import (
 	"mozilla.org/crec/processor"
 )
 
+const importRoot = "import"
+
 // Ingest contacts providers to import content into the system...
 func Ingest(providers []*provider.Provider, registry *processor.Registry) *Indexer {
 	indexer := CreateIndexer()
@@ -28,10 +32,14 @@ func Ingest(providers []*provider.Provider, registry *processor.Registry) *Index
 
 	for _, provider := range providers {
 		var err error
-		if provider.Native {
-			err = ingestNativeJSON(provider, client, indexer)
+		if provider.ContentURL != "" {
+			if provider.Native {
+				err = ingestNativeJSON(provider, client, indexer)
+			} else {
+				err = ingestSyndicationFeed(provider, client, indexer, registry)
+			}
 		} else {
-			err = ingestSyndicationFeed(provider, client, indexer, registry)
+			err = ingestFromQueue(provider, indexer)
 		}
 		if err != nil {
 			log.Println("Failed to ingest content from provider "+provider.ID, err)
@@ -39,6 +47,43 @@ func Ingest(providers []*provider.Provider, registry *processor.Registry) *Index
 		}
 	}
 	return indexer
+}
+
+// Queue content to be indexed in the next iteration
+func Queue(content []byte, provider string) error {
+	path := filepath.Join(importRoot, provider)
+	err := os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	f, err := ioutil.TempFile(path, "import")
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(content)
+	return err
+}
+
+func ingestFromQueue(provider *provider.Provider, indexer *Indexer) error {
+	path := filepath.Join(importRoot, provider.ID)
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if info != nil && !info.IsDir() {
+			bytes, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			content := make([]content.Content, 0)
+			err = json.Unmarshal(bytes, &content)
+			if err != nil {
+				return err
+			}
+			for _, item := range content {
+				indexer.Add(&item)
+			}
+		}
+		return nil
+	})
+	return err
 }
 
 func ingestNativeJSON(provider *provider.Provider, client *http.Client, indexer *Indexer) error {
