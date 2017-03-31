@@ -10,8 +10,6 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-const registryDir string = "crec-registry"
-
 // Provider represents a content provider.
 type Provider struct {
 	ID          string   // Unique system-wide identifier of this provider.
@@ -23,14 +21,17 @@ type Provider struct {
 	Native      bool     // Native indicates whether or not this provider uses our content format.
 }
 
+// Providers is a mapping of provider ID to instance
+type Providers map[string]*Provider
+
 // GetProviders returns all registered content providers
-func GetProviders() ([]*Provider, error) {
-	return readProvidersFromRegistry()
+func GetProviders(providerDir string) (Providers, error) {
+	return readProvidersFromRegistry(providerDir)
 }
 
 // Using a simple static configuration file based registry for now
-func readProvidersFromRegistry() ([]*Provider, error) {
-	files, err := ioutil.ReadDir(registryDir)
+func readProvidersFromRegistry(providerDir string) (Providers, error) {
+	files, err := ioutil.ReadDir(providerDir)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +40,8 @@ func readProvidersFromRegistry() ([]*Provider, error) {
 		return !e.IsDir() && strings.HasSuffix(e.Name(), "toml")
 	})
 
-	return _map(files, func(e os.FileInfo) (*Provider, error) {
-		bytes, err := ioutil.ReadFile(filepath.FromSlash(registryDir + "/" + e.Name()))
+	providers, err := _map(files, func(e os.FileInfo) (*Provider, error) {
+		bytes, err := ioutil.ReadFile(filepath.FromSlash(providerDir + "/" + e.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -48,6 +49,13 @@ func readProvidersFromRegistry() ([]*Provider, error) {
 		_, err = toml.Decode(string(bytes), &provider)
 		return &provider, err
 	})
+
+	providerMap := make(map[string]*Provider)
+	for _, provider := range providers {
+		providerMap[provider.ID] = provider
+	}
+
+	return providerMap, nil
 }
 
 func _filter(vs []os.FileInfo, f func(os.FileInfo) bool) []os.FileInfo {

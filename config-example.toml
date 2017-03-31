@@ -1,0 +1,8 @@
+#Rename to config.toml. After that NEVER commit/push to GitHub!
+
+ServerAddr=":8080"
+ServerContentPath="/crec/content"
+ServerImportPath="/crec/import"
+ImportQueueDir="import"
+ProviderRegistryDir="crec-registry"
+Secret="Pssst!"

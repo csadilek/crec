@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -16,30 +17,37 @@ import (
 
 	"io/ioutil"
 
+	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
+	"mozilla.org/crec/provider"
 )
 
 // Server to host public API for content consumption
 type Server struct {
-	Addr         string                // Address to start server e.g. ":8080"
-	Path         string                // Path to bind handler function e.g. "/content"
-	ImportPath   string                // Path to bind import handler function e.g. "/import".
 	indexer      unsafe.Pointer        // Indexer providing access to content
-	recommenders []content.Recommender // Array of available recommenders
+	recommenders []content.Recommender // Array of configured content recommenders
+	config       *config.Config        // Reference to system config
+	providers    provider.Providers    // All configured content providers
 }
 
 // Start a server which provides an API for content consumption
-func (s *Server) Start(indexer *ingester.Indexer) {
+func (s *Server) Start(config *config.Config, indexer *ingester.Indexer, providers provider.Providers) {
+	s.config = config
 	s.SetIndexer(indexer)
-	s.setRecommenders()
-	http.HandleFunc(s.ImportPath, s.importContentHandler)
-	http.HandleFunc(s.Path, s.contentHandler)
-	http.ListenAndServe(s.Addr, nil)
+	s.providers = providers
+	s.configureRecommenders()
+
+	fmt.Printf("Server listening at %s\n", config.GetAddr())
+	http.HandleFunc(config.GetImportPath(), s.importContentHandler)
+	http.HandleFunc(config.GetContentPath(), s.contentHandler)
+	err := http.ListenAndServe(config.GetAddr(), nil)
+	if err != nil {
+		log.Fatal("Server failed to start: ", err)
+	}
 }
 
 func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO API key and auth mechanism
 	content, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -47,8 +55,9 @@ func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO check for API key instead and look up provider
 	provider := r.URL.Query().Get("provider")
-	err = ingester.Queue(content, provider)
+	err = ingester.Queue(s.config, content, provider)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to enqueue content for indexing.\n"))
@@ -96,7 +105,7 @@ func (s *Server) produceRecommendations(values url.Values) []*content.Content {
 	for _, rec := range s.recommenders {
 		crec, err := rec.Recommend(s.getIndexer().GetContent(), params)
 		if err != nil {
-			log.Println("Recommender problem: ", err)
+			log.Println("Recommender failed: ", err)
 			continue
 		}
 		c = append(c, crec...)
@@ -134,7 +143,7 @@ func (s *Server) getIndexer() *ingester.Indexer {
 	return (*ingester.Indexer)(atomic.LoadPointer(&s.indexer))
 }
 
-func (s *Server) setRecommenders() {
+func (s *Server) configureRecommenders() {
 	tagBasedRecommender := &content.TagBasedRecommender{}
 	queryBasedRecommender := &content.QueryBasedRecommender{
 		Search: func(q string) ([]*content.Content, error) { return s.getIndexer().Query(q) }}

@@ -20,14 +20,13 @@ import (
 
 	"encoding/json"
 
+	"mozilla.org/crec/config"
 	"mozilla.org/crec/processor"
 )
 
-const importRoot = "import"
-
 // Ingest contacts providers to import content into the system...
-func Ingest(providers []*provider.Provider, registry *processor.Registry) *Indexer {
-	indexer := CreateIndexer()
+func Ingest(config *config.Config, providers provider.Providers, processors *processor.Registry) *Indexer {
+	indexer := CreateIndexer(config.GetIndexDir(), config.GetIndexFile())
 	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
 
 	for _, provider := range providers {
@@ -36,10 +35,10 @@ func Ingest(providers []*provider.Provider, registry *processor.Registry) *Index
 			if provider.Native {
 				err = ingestNativeJSON(provider, client, indexer)
 			} else {
-				err = ingestSyndicationFeed(provider, client, indexer, registry)
+				err = ingestSyndicationFeed(provider, client, indexer, processors)
 			}
 		} else {
-			err = ingestFromQueue(provider, indexer)
+			err = ingestFromQueue(config, provider, indexer)
 		}
 		if err != nil {
 			log.Println("Failed to ingest content from provider "+provider.ID, err)
@@ -50,8 +49,8 @@ func Ingest(providers []*provider.Provider, registry *processor.Registry) *Index
 }
 
 // Queue content to be indexed in the next iteration
-func Queue(content []byte, provider string) error {
-	path := filepath.Join(importRoot, provider)
+func Queue(config *config.Config, content []byte, provider string) error {
+	path := filepath.Join(config.GetImportQueueDir(), provider)
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err
@@ -64,8 +63,8 @@ func Queue(content []byte, provider string) error {
 	return err
 }
 
-func ingestFromQueue(provider *provider.Provider, indexer *Indexer) error {
-	path := filepath.Join(importRoot, provider.ID)
+func ingestFromQueue(config *config.Config, provider *provider.Provider, indexer *Indexer) error {
+	path := filepath.Join(config.GetImportQueueDir(), provider.ID)
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info != nil && !info.IsDir() {
 			bytes, err := ioutil.ReadFile(path)
@@ -112,7 +111,7 @@ func ingestNativeJSON(provider *provider.Provider, client *http.Client, indexer 
 }
 
 func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, indexer *Indexer,
-	registry *processor.Registry) error {
+	processors *processor.Registry) error {
 
 	fp := gofeed.NewParser()
 	fp.Client = client
@@ -122,7 +121,7 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 	}
 
 	for _, item := range feed.Items {
-		newc, err := createContentFromFeedItem(provider, registry, item)
+		newc, err := createContentFromFeedItem(provider, processors, item)
 		if err != nil {
 			return err
 		}
@@ -132,7 +131,7 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 	return nil
 }
 
-func createContentFromFeedItem(provider *provider.Provider, registry *processor.Registry, item *gofeed.Item) (*content.Content, error) {
+func createContentFromFeedItem(provider *provider.Provider, processors *processor.Registry, item *gofeed.Item) (*content.Content, error) {
 	r := strings.NewReader(item.Description)
 	doc, err := html.Parse(r)
 	if err != nil {
@@ -141,7 +140,7 @@ func createContentFromFeedItem(provider *provider.Provider, registry *processor.
 
 	var context = processor.NewHTMLContext(doc)
 	for _, name := range provider.Processors {
-		context, err = registry.GetNewProcessor(name).Process(context)
+		context, err = processors.GetNewProcessor(name).Process(context)
 		if err != nil {
 			return nil, err
 		}

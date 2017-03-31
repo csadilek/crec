@@ -4,8 +4,7 @@ import (
 	"log"
 	"time"
 
-	"fmt"
-
+	"mozilla.org/crec/config"
 	"mozilla.org/crec/ingester"
 	"mozilla.org/crec/processor"
 	"mozilla.org/crec/provider"
@@ -13,26 +12,29 @@ import (
 )
 
 func main() {
-	err := ingester.RemoveAllIndexes()
+	config := config.Get()
+	processors := processor.GetRegistry()
+
+	err := ingester.RemoveAll(config)
 	if err != nil {
-		log.Println("Failed to delete old indexes on startup: ", err)
+		log.Println("Failed to delete old content on startup: ", err)
 	}
 
-	providers, err := provider.GetProviders()
+	providers, err := provider.GetProviders(config.GetProviderRegistryDir())
 	if err != nil {
-		log.Fatal("Failed to read from content provider registry: ", err)
+		log.Fatal("Failed to read providers from registry: ", err)
 	}
 
-	indexer := ingester.Ingest(providers, processor.GetRegistry())
+	indexer := ingester.Ingest(config, providers, processors)
 
-	s := server.Server{Addr: ":8080", Path: "/crec/content", ImportPath: "/crec/import"}
+	s := server.Server{}
 	ticker := time.NewTicker(time.Minute * 5)
 	go func() {
 		for _ = range ticker.C {
-			indexer := ingester.Ingest(providers, processor.GetRegistry())
+			indexer := ingester.Ingest(config, providers, processors)
 			s.SetIndexer(indexer)
 		}
 	}()
-	fmt.Printf("Server listening at %s%s\n", s.Path, s.Addr)
-	s.Start(indexer)
+
+	s.Start(config, indexer, providers)
 }

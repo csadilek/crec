@@ -1,11 +1,15 @@
 package ingester
 
-import "mozilla.org/crec/content"
-import "github.com/blevesearch/bleve"
-import "github.com/nu7hatch/gouuid"
-import "path/filepath"
-import "log"
-import "os"
+import (
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/blevesearch/bleve"
+	"github.com/nu7hatch/gouuid"
+	"mozilla.org/crec/config"
+	"mozilla.org/crec/content"
+)
 
 // Indexer responsible for indexing content
 type Indexer struct {
@@ -15,16 +19,13 @@ type Indexer struct {
 	index      bleve.Index
 }
 
-const indexRoot = "index"
-const indexPath = "crec.bleve"
-
 // CreateIndexer create an instance of a content indexer
-func CreateIndexer() *Indexer {
+func CreateIndexer(indexRoot string, indexFile string) *Indexer {
 	u, err := uuid.NewV4()
 	if err != nil {
 		log.Fatal("Failed to create index directory:", err)
 	}
-	indexPath := filepath.FromSlash(indexRoot + "/" + u.String() + "/" + indexPath)
+	indexPath := filepath.FromSlash(indexRoot + "/" + u.String() + "/" + indexFile)
 	index, err := bleve.Open(indexPath)
 	if err != nil {
 		mapping := bleve.NewIndexMapping()
@@ -34,21 +35,21 @@ func CreateIndexer() *Indexer {
 		}
 	}
 
-	return &Indexer{id: u.String(), content: make([]*content.Content, 0), index: index}
+	return &Indexer{
+		id:         u.String(),
+		content:    make([]*content.Content, 0),
+		contentMap: make(map[string]*content.Content),
+		index:      index}
 }
 
-// RemoveAllIndexes deletes all existing indexes
-func RemoveAllIndexes() error {
-	err := os.RemoveAll(indexRoot)
+// RemoveAll deletes all existing indexes
+func RemoveAll(config *config.Config) error {
+	err := os.RemoveAll(config.GetIndexDir())
 	return err
 }
 
 // Add content to index
 func (i *Indexer) Add(c *content.Content) error {
-	if i.contentMap == nil {
-		i.contentMap = make(map[string]*content.Content)
-	}
-
 	i.content = append(i.content, c)
 	i.contentMap[c.ID] = c
 	return i.index.Index(c.ID, c.Summary)
