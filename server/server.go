@@ -38,9 +38,9 @@ func (s *Server) Start(config *config.Config, indexer *ingester.Indexer, provide
 	s.providers = providers
 	s.configureRecommenders()
 
-	fmt.Printf("Server listening at %s\n", config.GetAddr())
 	http.HandleFunc(config.GetImportPath(), s.importContentHandler)
 	http.HandleFunc(config.GetContentPath(), s.contentHandler)
+	fmt.Printf("Server listening at %s\n", config.GetAddr())
 	err := http.ListenAndServe(config.GetAddr(), nil)
 	if err != nil {
 		log.Fatal("Server failed to start: ", err)
