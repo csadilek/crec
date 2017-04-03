@@ -6,6 +6,8 @@ import (
 
 	"github.com/andybalholm/cascadia"
 
+	"log"
+
 	"golang.org/x/net/html"
 )
 
@@ -26,7 +28,12 @@ func GetRegistry() *Registry {
 
 // GetNewProcessor returns the content processor with the given name
 func (r *Registry) GetNewProcessor(name string) Processor {
-	return reflect.New(r.processors[name]).Elem().Interface().(Processor)
+	processor, ok := r.processors[name]
+	if !ok {
+		log.Fatal("Couldn't find content processor with name " + name)
+	}
+
+	return reflect.New(processor).Elem().Interface().(Processor)
 }
 
 // Context provides a processing context passed between processors

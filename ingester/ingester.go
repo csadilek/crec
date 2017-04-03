@@ -25,7 +25,7 @@ import (
 )
 
 // Ingest contacts providers to import content into the system...
-func Ingest(config *config.Config, providers provider.Providers, processors *processor.Registry) *Indexer {
+func Ingest(config *config.Config, providers provider.Providers) *Indexer {
 	indexer := CreateIndexer(config.GetIndexDir(), config.GetIndexFile())
 	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
 
@@ -35,7 +35,7 @@ func Ingest(config *config.Config, providers provider.Providers, processors *pro
 			if provider.Native {
 				err = ingestNativeJSON(provider, client, indexer)
 			} else {
-				err = ingestSyndicationFeed(provider, client, indexer, processors)
+				err = ingestSyndicationFeed(provider, client, indexer)
 			}
 		} else {
 			err = ingestFromQueue(config, provider, indexer)
@@ -110,8 +110,7 @@ func ingestNativeJSON(provider *provider.Provider, client *http.Client, indexer 
 	return nil
 }
 
-func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, indexer *Indexer,
-	processors *processor.Registry) error {
+func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, indexer *Indexer) error {
 
 	fp := gofeed.NewParser()
 	fp.Client = client
@@ -121,7 +120,7 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 	}
 
 	for _, item := range feed.Items {
-		newc, err := createContentFromFeedItem(provider, processors, item)
+		newc, err := createContentFromFeedItem(provider, item)
 		if err != nil {
 			return err
 		}
@@ -131,7 +130,7 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 	return nil
 }
 
-func createContentFromFeedItem(provider *provider.Provider, processors *processor.Registry, item *gofeed.Item) (*content.Content, error) {
+func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (*content.Content, error) {
 	r := strings.NewReader(item.Description)
 	doc, err := html.Parse(r)
 	if err != nil {
@@ -139,8 +138,8 @@ func createContentFromFeedItem(provider *provider.Provider, processors *processo
 	}
 
 	var context = processor.NewHTMLContext(doc)
-	for _, name := range provider.Processors {
-		context, err = processors.GetNewProcessor(name).Process(context)
+	for _, processor := range provider.GetProcessors() {
+		context, err = processor.Process(context)
 		if err != nil {
 			return nil, err
 		}
