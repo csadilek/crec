@@ -31,19 +31,19 @@ func GenerateAPIKey(provider string, config *config.Config) string {
 	return base64.URLEncoding.EncodeToString(ciphertext)
 }
 
-// GetProviderForAPIKey returns the provider the key was generate for
-func GetProviderForAPIKey(key string, config *config.Config) string {
+// GetProviderForAPIKey returns the provider the key was generated for
+func GetProviderForAPIKey(key string, config *config.Config) (string, error) {
 	apikey, err := base64.URLEncoding.DecodeString(key)
 	if err != nil {
-		log.Fatal("Failed to decode API Key ", err)
+		return "", err
 	}
 	block, err := aes.NewCipher([]byte(config.GetSecret()))
 	if err != nil {
-		log.Fatal("Failed to verify API Key ", err)
+		return "", err
 	}
 	iv := apikey[:aes.BlockSize]
 	provider := apikey[aes.BlockSize:]
 	cfb := cipher.NewCFBDecrypter(block, iv)
 	cfb.XORKeyStream(provider, provider)
-	return string(provider)
+	return string(provider), nil
 }

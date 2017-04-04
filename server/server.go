@@ -48,16 +48,27 @@ func (s *Server) Start(config *config.Config, indexer *ingester.Indexer, provide
 }
 
 func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
-	content, err := ioutil.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to read body of request.\n"))
 		return
 	}
 
-	// TODO check for API key instead and look up provider
-	provider := r.URL.Query().Get("provider")
-	err = ingester.Queue(s.config, content, provider)
+	apikey := strings.TrimSpace(strings.TrimLeft(r.Header.Get("Authorization"), "APIKEY"))
+	provider, err := GetProviderForAPIKey(apikey, s.config)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	_, ok := s.providers[provider]
+	if !ok {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	err = ingester.Queue(s.config, body, provider)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to enqueue content for indexing.\n"))
