@@ -1,8 +1,18 @@
-#Rename to config.toml. After that NEVER commit/push to GitHub!
+#Rename to config.toml to provide custom configuation.
 
+#NEVER commit/push to GitHub!
+Secret="Pssst!0123456789"
+
+#Examples below show the system defaults:
 ServerAddr=":8080"
 ServerContentPath="/crec/content"
 ServerImportPath="/crec/import"
+
 ImportQueueDir="import"
+IndexDir="index"
+IndexFile="crec.bleve"
+IndexRefreshIntervalInMinutes=5
+
+ClientCacheMaxAgeInSeconds=120
+
 ProviderRegistryDir="crec-registry"
-Secret="Pssst!"

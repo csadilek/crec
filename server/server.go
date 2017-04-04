@@ -87,7 +87,7 @@ func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Etag", s.getIndexer().GetID())
-	w.Header().Set("Cache-Control", "max-age=120, must-revalidate")
+	w.Header().Set("Cache-Control", "max-age="+s.config.GetClientCacheMaxAge()+", must-revalidate")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	c := s.produceRecommendations(r.URL.Query())

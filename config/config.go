@@ -3,35 +3,42 @@ package config
 import (
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 
 	"log"
+
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
 
 // Config holds all system-wide settings
 type Config struct {
-	Secret              string
-	ServerAddr          string
-	ServerContentPath   string
-	ServerImportPath    string
-	ImportQueueDir      string
-	IndexDir            string
-	IndexFile           string
-	ProviderRegistryDir string
+	Secret                        string
+	ServerAddr                    string
+	ServerContentPath             string
+	ServerImportPath              string
+	ImportQueueDir                string
+	IndexDir                      string
+	IndexFile                     string
+	IndexRefreshIntervalInMinutes int
+	ProviderRegistryDir           string
+	ClientCacheMaxAgeInSeconds    int
 }
 
 // Get returns the configuration based on config.toml, if present.
 // Default values are provided for all keys not present, except Secret.
 func Get() *Config {
 	c := &Config{
-		ServerAddr:          ":8080",
-		ServerContentPath:   "/crec/content",
-		ServerImportPath:    "/crec/import",
-		ImportQueueDir:      "import",
-		IndexDir:            "index",
-		IndexFile:           "crec.bleve",
-		ProviderRegistryDir: "crec-registry"}
+		ServerAddr:                    ":8080",
+		ServerContentPath:             "/crec/content",
+		ServerImportPath:              "/crec/import",
+		ImportQueueDir:                "import",
+		IndexDir:                      "index",
+		IndexFile:                     "crec.bleve",
+		IndexRefreshIntervalInMinutes: 5,
+		ClientCacheMaxAgeInSeconds:    120,
+		ProviderRegistryDir:           "crec-registry"}
 
 	bytes, err := ioutil.ReadFile(filepath.FromSlash("config.toml"))
 	if err != nil {
@@ -84,4 +91,14 @@ func (c *Config) GetProviderRegistryDir() string {
 // GetSecret returns the configured secret to generate API keys
 func (c *Config) GetSecret() string {
 	return c.Secret
+}
+
+// GetIndexRefreshInterval returns the configured refresh interval for the content index
+func (c *Config) GetIndexRefreshInterval() time.Duration {
+	return time.Minute * time.Duration(int64(c.IndexRefreshIntervalInMinutes))
+}
+
+// GetClientCacheMaxAge returns the configured cache control max age
+func (c *Config) GetClientCacheMaxAge() string {
+	return strconv.Itoa(c.ClientCacheMaxAgeInSeconds)
 }

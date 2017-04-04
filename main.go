@@ -26,7 +26,7 @@ func main() {
 	indexer := ingester.Ingest(config, providers)
 
 	s := server.Server{}
-	ticker := time.NewTicker(time.Minute * 5)
+	ticker := time.NewTicker(config.GetIndexRefreshInterval())
 	go func() {
 		for _ = range ticker.C {
 			indexer := ingester.Ingest(config, providers)
