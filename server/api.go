@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"io"
+	"strings"
 
 	"log"
 
@@ -28,11 +29,15 @@ func GenerateAPIKey(provider string, config *config.Config) string {
 	}
 	cfb := cipher.NewCFBEncrypter(block, iv)
 	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(plaintext))
-	return base64.URLEncoding.EncodeToString(ciphertext)
+	return strings.Trim(base64.URLEncoding.EncodeToString(ciphertext), "=")
 }
 
 // GetProviderForAPIKey returns the provider the key was generated for
 func GetProviderForAPIKey(key string, config *config.Config) (string, error) {
+	for i := 0; i < len(key)%4; i++ {
+		key = key + "="
+	}
+
 	apikey, err := base64.URLEncoding.DecodeString(key)
 	if err != nil {
 		return "", err
