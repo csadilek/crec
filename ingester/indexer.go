@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"strings"
+
 	"github.com/blevesearch/bleve"
 	"github.com/nu7hatch/gouuid"
 	"mozilla.org/crec/config"
@@ -13,10 +15,12 @@ import (
 
 // Indexer responsible for indexing content
 type Indexer struct {
-	id         string
-	content    []*content.Content
-	contentMap map[string]*content.Content
-	index      bleve.Index
+	id          string
+	content     []*content.Content
+	contentMap  map[string]*content.Content
+	languageMap map[string][]string
+	regionMap   map[string][]string
+	index       bleve.Index
 }
 
 // CreateIndexer create an instance of a content indexer
@@ -36,10 +40,12 @@ func CreateIndexer(indexRoot string, indexFile string) *Indexer {
 	}
 
 	return &Indexer{
-		id:         u.String(),
-		content:    make([]*content.Content, 0),
-		contentMap: make(map[string]*content.Content),
-		index:      index}
+		id:          u.String(),
+		content:     make([]*content.Content, 0),
+		contentMap:  make(map[string]*content.Content),
+		languageMap: make(map[string][]string),
+		regionMap:   make(map[string][]string),
+		index:       index}
 }
 
 // RemoveAll deletes all existing indexes
@@ -52,6 +58,26 @@ func RemoveAll(config *config.Config) error {
 func (i *Indexer) Add(c *content.Content) error {
 	i.content = append(i.content, c)
 	i.contentMap[c.ID] = c
+
+	// TODO default to all? q=?
+	for _, region := range c.Regions {
+		r := strings.ToLower(region)
+		if _, ok := i.regionMap[r]; ok {
+			i.regionMap[r] = append(i.regionMap[r], c.ID)
+		} else {
+			i.regionMap[r] = []string{c.ID}
+		}
+	}
+
+	for _, language := range c.Languages {
+		l := strings.ToLower(language)
+		if _, ok := i.languageMap[l]; ok {
+			i.languageMap[l] = append(i.languageMap[l], c.ID)
+		} else {
+			i.languageMap[l] = []string{c.ID}
+		}
+	}
+
 	return i.index.Index(c.ID, c.Summary)
 }
 

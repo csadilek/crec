@@ -111,7 +111,6 @@ func ingestNativeJSON(provider *provider.Provider, client *http.Client, indexer 
 }
 
 func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, indexer *Indexer) error {
-
 	fp := gofeed.NewParser()
 	fp.Client = client
 	feed, err := fp.ParseURL(provider.ContentURL)
@@ -161,7 +160,9 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		Tags:      append(item.Categories, provider.Categories...),
 		Author:    processAuthor(item),
 		Published: item.Published,
-		Item:      item}
+		Item:      item,
+		Regions:   provider.Regions,
+		Languages: provider.Languages}
 	return newc, nil
 }
 

@@ -9,8 +9,6 @@ import (
 
 	"time"
 
-	"fmt"
-
 	"github.com/BurntSushi/toml"
 )
 
@@ -76,7 +74,6 @@ func Get() *Config {
 		log.Println("Failed to read provided config (using default settings): ", err)
 	}
 
-	fmt.Printf("%v\n", c)
 	return c
 }
 

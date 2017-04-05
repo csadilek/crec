@@ -20,6 +20,8 @@ type Content struct {
 	Author      string       `json:"author,omitempty"`
 	Published   string       `json:"published,omitempty"`
 	Tags        []string     `json:"tags,omitempty"`
+	Languages   []string     `json:"languages,omitempty"`
+	Regions     []string     `json:"regions,omitempty"`
 	Item        *gofeed.Item `json:"-"`
 }
 
@@ -38,7 +40,7 @@ func filter(c []*Content, f func(*Content) bool) []*Content {
 	return vsf
 }
 
-// AnyTagFilter returns a filter function which retains the content if any tag is present
+// anyTagFilter returns a filter function which retains the content if any tag is present
 func anyTagFilter(tags map[string]bool) func(*Content) bool {
 	return func(c *Content) bool {
 		for _, t := range c.Tags {
@@ -50,7 +52,7 @@ func anyTagFilter(tags map[string]bool) func(*Content) bool {
 	}
 }
 
-// AllTagFilter returns a filter functions which retains the content if all tags are present
+// allTagFilter returns a filter functions which retains the content if all tags are present
 func allTagFilter(tags map[string]bool) func(*Content) bool {
 	return func(c *Content) bool {
 		tagMap := make(map[string]bool)
@@ -66,7 +68,7 @@ func allTagFilter(tags map[string]bool) func(*Content) bool {
 	}
 }
 
-// Transform applies the provided function to every element in the provided array
+// transform applies the provided function to every element in the provided array
 func transform(c []*Content, f func(*Content) *Content) []*Content {
 	vsf := make([]*Content, 0)
 	for _, v := range c {

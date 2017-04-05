@@ -22,6 +22,8 @@ type Provider struct {
 	Processors  []string              // Chain of content processor names, executed in declaration order.
 	processors  []processor.Processor // Chain of content processors instances, executed in declaration order.
 	Native      bool                  // Native indicates whether or not this provider uses our content format.
+	Regions     []string              // Specifies the default applicable regions for this provider’s content. If omitted, content will be considered for all regions, unless specified otherwise in content item.
+	Languages   []string              // Specifies the default applicable languages for this provider’s content. If omitted, content will be considered for all languages, unless specified otherwise in content item.
 }
 
 // Providers is a mapping of provider ID to instance

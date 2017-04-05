@@ -1,0 +1,7 @@
+ID = "welt-sport"
+Description = "Welt Sport feed"
+URL = "www.welt.de"
+ContentURL = "https://www.welt.de/feeds/section/sport.rss"
+Processors = ["ExternalLinkRemover"]
+Regions = ["DE"]
+Languages = ["de"]
