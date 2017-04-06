@@ -20,8 +20,9 @@ type Content struct {
 	Author      string       `json:"author,omitempty"`
 	Published   string       `json:"published,omitempty"`
 	Tags        []string     `json:"tags,omitempty"`
-	Languages   []string     `json:"languages,omitempty"`
+	Language    string       `json:"language,omitempty"`
 	Regions     []string     `json:"regions,omitempty"`
+	Script      string       `json:"script,omitempty"`
 	Item        *gofeed.Item `json:"-"`
 }
 

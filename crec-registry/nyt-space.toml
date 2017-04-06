@@ -4,4 +4,4 @@ URL = "www.nytimes.com"
 ContentURL = "http://rss.nytimes.com/services/xml/rss/nyt/Space.xml"
 Categories = ["Space", "Technology"]
 Processors = ["ExternalLinkRemover"]
-Languages = ["en"]
+Language = "en"

@@ -162,7 +162,8 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		Published: item.Published,
 		Item:      item,
 		Regions:   provider.Regions,
-		Languages: provider.Languages}
+		Language:  provider.Language,
+		Script:    provider.Script}
 	return newc, nil
 }
 

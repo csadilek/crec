@@ -3,7 +3,8 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"net/url"
+
+	"golang.org/x/text/language"
 
 	"encoding/json"
 	"log"
@@ -40,6 +41,7 @@ func (s *Server) Start(config *config.Config, indexer *ingester.Indexer, provide
 
 	http.HandleFunc(config.GetImportPath(), s.importContentHandler)
 	http.HandleFunc(config.GetContentPath(), s.contentHandler)
+
 	fmt.Printf("Server listening at %s\n", config.GetAddr())
 	err := http.ListenAndServe(config.GetAddr(), nil)
 	if err != nil {
@@ -48,13 +50,6 @@ func (s *Server) Start(config *config.Config, indexer *ingester.Indexer, provide
 }
 
 func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to read body of request.\n"))
-		return
-	}
-
 	apikey := strings.TrimSpace(strings.TrimLeft(r.Header.Get("Authorization"), "APIKEY"))
 	provider, err := GetProviderForAPIKey(apikey, s.config)
 	if err != nil {
@@ -65,6 +60,13 @@ func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
 	_, ok := s.providers[provider]
 	if !ok {
 		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to read body of request.\n"))
 		return
 	}
 
@@ -90,11 +92,10 @@ func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "max-age="+s.config.GetClientCacheMaxAge()+", must-revalidate")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	c := s.produceRecommendations(r.URL.Query())
+	c := s.produceRecommendations(r)
 
 	format := r.URL.Query().Get("f")
 	acceptHeader := r.Header.Get("Accept")
-
 	if strings.Contains(acceptHeader, "html") && !strings.EqualFold(format, "json") {
 		s.respondWithHTML(w, c)
 	} else if strings.Contains(acceptHeader, "json") ||
@@ -107,14 +108,16 @@ func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) produceRecommendations(values url.Values) []*content.Content {
+func (s *Server) produceRecommendations(r *http.Request) []*content.Content {
+	tags, _, _ := language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
+
 	params := make(map[string]string)
-	params["tags"] = values.Get("t")
-	params["query"] = values.Get("q")
+	params["tags"] = r.URL.Query().Get("t")
+	params["query"] = r.URL.Query().Get("q")
 
 	c := make([]*content.Content, 0)
 	for _, rec := range s.recommenders {
-		crec, err := rec.Recommend(s.getIndexer().GetContent(), params)
+		crec, err := rec.Recommend(s.getIndexer().GetLocalizedContent(tags), params)
 		if err != nil {
 			log.Println("Recommender failed: ", err)
 			continue

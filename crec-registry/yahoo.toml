@@ -4,4 +4,4 @@ URL = "www.yahoo.com"
 ContentURL = "https://www.yahoo.com/news/rss"
 Processors = ["ExternalLinkRemover"]
 Regions = ["US"]
-Languages = ["en"]
+Language = "en"

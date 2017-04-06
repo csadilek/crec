@@ -3,5 +3,5 @@ Description = "Google news feed"
 URL = "www.google.com"
 ContentURL = "https://news.google.com/?output=rss&topic=s"
 Processors = ["ImageExtractor", "ExternalLinkRemover", "BoldElementRemover"]
-Regions = ["US"]
-Languages = ["en"]
+Regions = ["US", "CA"]
+Language = "en"

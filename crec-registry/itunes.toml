@@ -4,4 +4,4 @@ URL = "www.apple.com/itunes"
 ContentURL = "http://www.apple.com/newsroom/rss-feed.rss"
 Processors = ["ExternalLinkRemover"]
 Regions = ["US"]
-Languages = ["en"]
+Language = "en"
