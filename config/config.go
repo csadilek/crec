@@ -126,3 +126,8 @@ func (c *Config) GetIndexRefreshInterval() time.Duration {
 func (c *Config) GetClientCacheMaxAge() string {
 	return strconv.Itoa(c.clientCacheMaxAgeInSeconds)
 }
+
+// Create a config instance from the provided parameters
+func Create(secret string) *Config {
+	return &Config{secret: secret}
+}
