@@ -3,27 +3,24 @@ package content
 import (
 	"fmt"
 	"strings"
-
-	"github.com/mmcdole/gofeed"
 )
 
-// Content is just a simple wrapper of a gofeed Item for now. More to come...
+// Content represents our unified data model abstracting from the various formats used by providers.
 type Content struct {
-	ID          string       `json:"id,omitempty"`
-	Source      string       `json:"source,omitempty"`
-	Title       string       `json:"title,omitempty"`
-	Link        string       `json:"link,omitempty"`
-	Image       string       `json:"image,omitempty"`
-	Summary     string       `json:"summary,omitempty"`
-	HTML        string       `json:"html,omitempty"`
-	Explanation string       `json:"explanation,omitempty"`
-	Author      string       `json:"author,omitempty"`
-	Published   string       `json:"published,omitempty"`
-	Tags        []string     `json:"tags,omitempty"`
-	Language    string       `json:"language,omitempty"`
-	Regions     []string     `json:"regions,omitempty"`
-	Script      string       `json:"script,omitempty"`
-	Item        *gofeed.Item `json:"-"`
+	ID          string   `json:"id,omitempty"`          // Globally unique content identifier
+	Source      string   `json:"source,omitempty"`      // Identifier of the content provider
+	Title       string   `json:"title,omitempty"`       // Title provided for this content
+	Link        string   `json:"link,omitempty"`        // Link to a web site showing a detailed view of the content
+	Image       string   `json:"image,omitempty"`       // Image URI to a preview image
+	Summary     string   `json:"summary,omitempty"`     // Summary of the content
+	HTML        string   `json:"html,omitempty"`        // HTML view of the content
+	Explanation string   `json:"explanation,omitempty"` // Explanation as to why the content was recommended to a specific client
+	Author      string   `json:"author,omitempty"`      // Author of the content
+	Published   string   `json:"published,omitempty"`   // Publication date
+	Tags        []string `json:"tags,omitempty"`        // Tags and categories applied to this content
+	Language    string   `json:"language,omitempty"`    // Language the content is written in
+	Regions     []string `json:"regions,omitempty"`     // Regions the content is applicable to
+	Script      string   `json:"script,omitempty"`      // Script the content is written in
 }
 
 func (c *Content) String() string {
@@ -69,11 +66,11 @@ func allTagFilter(tags map[string]bool) func(*Content) bool {
 	}
 }
 
-// transform applies the provided function to every element in the provided array
-func transform(c []*Content, f func(*Content) *Content) []*Content {
+// transform applies the provided function to a copy of every element in the provided array
+func transform(c []*Content, f func(Content) *Content) []*Content {
 	vsf := make([]*Content, 0)
 	for _, v := range c {
-		vsf = append(vsf, f(v))
+		vsf = append(vsf, f(*v))
 	}
 	return vsf
 }
