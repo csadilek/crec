@@ -160,7 +160,6 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		Tags:      append(item.Categories, provider.Categories...),
 		Author:    processAuthor(item),
 		Published: item.Published,
-		Item:      item,
 		Regions:   provider.Regions,
 		Language:  provider.Language,
 		Script:    provider.Script}

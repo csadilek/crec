@@ -39,10 +39,12 @@ func (r *TagBasedRecommender) Recommend(allContent []*Content, params map[string
 			c = filter(allContent, allTagFilter(tagMap))
 		}
 	}
-	return transform(c, func(item *Content) *Content {
+
+	c = transform(c, func(item Content) *Content {
 		item.Explanation = "Selected for users interested in " + tags
-		return item
-	}), nil
+		return &item
+	})
+	return c, nil
 }
 
 // QueryBasedRecommender recommends content based on a full-text query
