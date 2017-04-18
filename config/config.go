@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 
@@ -63,6 +64,11 @@ func Get() *Config {
 		indexRefreshIntervalInMinutes: 5,
 		clientCacheMaxAgeInSeconds:    120,
 		providerRegistryDir:           "crec-registry"}
+
+	port := os.Getenv("PORT")
+	if port != "" {
+		c.serverAddr = ":" + port
+	}
 
 	bytes, err := ioutil.ReadFile(filepath.FromSlash("config.toml"))
 	if err != nil {
