@@ -7,7 +7,7 @@ import (
 )
 
 func TestAPIKeyGen(t *testing.T) {
-	config := config.Create("testing-secret-0")
+	config := config.CreateWithSecret("testing-secret-0")
 	want := "test-provider"
 
 	apikey := GenerateAPIKey(want, config)

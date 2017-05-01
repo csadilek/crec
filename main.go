@@ -25,14 +25,18 @@ func main() {
 
 	indexer := ingester.Ingest(config, providers)
 
-	s := server.Server{}
+	server := server.Create(config, indexer, providers)
+
 	ticker := time.NewTicker(config.GetIndexRefreshInterval())
 	go func() {
 		for _ = range ticker.C {
 			indexer := ingester.Ingest(config, providers)
-			s.SetIndexer(indexer)
+			server.SetIndexer(indexer)
 		}
 	}()
 
-	s.Start(config, indexer, providers)
+	err = server.Start()
+	if err != nil {
+		log.Fatal("Server failed to start: ", err)
+	}
 }

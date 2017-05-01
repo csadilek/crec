@@ -4,9 +4,9 @@ import (
 	"strings"
 )
 
-// Recommender is an extension point for content recommenders. It suggests
-// matching content given a reference to all available content and a map
-// of parameters provided by the client.
+// Recommender is an extension point for content recommenders. It calculates
+// content recommendations given a reference to all available content and a
+// map of parameters provided by the client.
 type Recommender interface {
 	Recommend(allContent []*Content, params map[string]string) ([]*Content, error)
 }

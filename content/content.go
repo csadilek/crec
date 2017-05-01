@@ -24,10 +24,10 @@ type Content struct {
 }
 
 func (c *Content) String() string {
-	return fmt.Sprintf("%s: %s", c.Source, c.Title)
+	return fmt.Sprintf("Source: %s: Title: %s", c.Source, c.Title)
 }
 
-// filter the content using the provided predicate function
+// filter content using the provided predicate function
 func filter(c []*Content, f func(*Content) bool) []*Content {
 	vsf := make([]*Content, 0)
 	for _, v := range c {
@@ -38,7 +38,8 @@ func filter(c []*Content, f func(*Content) bool) []*Content {
 	return vsf
 }
 
-// anyTagFilter returns a filter function which retains the content if any tag is present
+// anyTagFilter returns a filter function which retains the content if any
+// of the provided tags is present
 func anyTagFilter(tags map[string]bool) func(*Content) bool {
 	return func(c *Content) bool {
 		for _, t := range c.Tags {
@@ -50,7 +51,8 @@ func anyTagFilter(tags map[string]bool) func(*Content) bool {
 	}
 }
 
-// allTagFilter returns a filter functions which retains the content if all tags are present
+// allTagFilter returns a filter functions which retains the content if all
+// of the provided tags are present
 func allTagFilter(tags map[string]bool) func(*Content) bool {
 	return func(c *Content) bool {
 		tagMap := make(map[string]bool)

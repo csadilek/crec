@@ -15,4 +15,4 @@ IndexRefreshIntervalInMinutes=5
 
 ClientCacheMaxAgeInSeconds=120
 
-ProviderRegistryDir="crec-registry"
+ProviderRegistryDir="provider-registry"

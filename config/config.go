@@ -25,6 +25,7 @@ type Config struct {
 	indexRefreshIntervalInMinutes int
 	providerRegistryDir           string
 	clientCacheMaxAgeInSeconds    int
+	templateDir                   string
 }
 
 // UnmarshalTOML provides a custom "unmarshaller" so we can keep our fields
@@ -36,12 +37,13 @@ func (c *Config) UnmarshalTOML(data interface{}) error {
 	c.maybeUpdateConfig(d, "ServerAddr", func(val interface{}) { c.serverAddr = val.(string) })
 	c.maybeUpdateConfig(d, "ServerContentPath", func(val interface{}) { c.serverContentPath = val.(string) })
 	c.maybeUpdateConfig(d, "ServerImportPath", func(val interface{}) { c.serverImportPath = val.(string) })
-	c.maybeUpdateConfig(d, "IndexQueueDir", func(val interface{}) { c.importQueueDir = val.(string) })
+	c.maybeUpdateConfig(d, "ImportQueueDir", func(val interface{}) { c.importQueueDir = val.(string) })
 	c.maybeUpdateConfig(d, "IndexDir", func(val interface{}) { c.indexDir = val.(string) })
 	c.maybeUpdateConfig(d, "IndexFile", func(val interface{}) { c.indexFile = val.(string) })
 	c.maybeUpdateConfig(d, "IndexRefreshIntervalInMinutes", func(val interface{}) { c.indexRefreshIntervalInMinutes = val.(int) })
 	c.maybeUpdateConfig(d, "ProviderRegistryDir", func(val interface{}) { c.providerRegistryDir = val.(string) })
 	c.maybeUpdateConfig(d, "ClientCacheMaxAgeInSeconds", func(val interface{}) { c.clientCacheMaxAgeInSeconds = val.(int) })
+	c.maybeUpdateConfig(d, "TemplateDir", func(val interface{}) { c.templateDir = val.(string) })
 	return nil
 }
 
@@ -63,7 +65,8 @@ func Get() *Config {
 		indexFile:                     "crec.bleve",
 		indexRefreshIntervalInMinutes: 5,
 		clientCacheMaxAgeInSeconds:    120,
-		providerRegistryDir:           "crec-registry"}
+		providerRegistryDir:           "provider-registry",
+		templateDir:                   "template"}
 
 	port := os.Getenv("PORT")
 	if port != "" {
@@ -113,7 +116,7 @@ func (c *Config) GetIndexFile() string {
 	return c.indexDir
 }
 
-// GetProviderRegistryDir returns the directy path containing provider configurations e.g. crec-registry
+// GetProviderRegistryDir returns the directy path containing provider configurations e.g. provider-registry
 func (c *Config) GetProviderRegistryDir() string {
 	return c.providerRegistryDir
 }
@@ -133,7 +136,36 @@ func (c *Config) GetClientCacheMaxAge() string {
 	return strconv.Itoa(c.clientCacheMaxAgeInSeconds)
 }
 
-// Create a config instance from the provided parameters
-func Create(secret string) *Config {
-	return &Config{secret: secret}
+// GetTemplateDir returns the configured html template directory
+func (c *Config) GetTemplateDir() string {
+	return c.templateDir
+}
+
+// Create returns a config instance with the provided parameters
+func Create(secret string, templateDir string) *Config {
+	config := Get()
+	config.secret = secret
+	config.templateDir = templateDir
+	return config
+}
+
+// CreateWithSecret returns a config instance with the provided secret
+func CreateWithSecret(secret string) *Config {
+	config := Get()
+	config.secret = secret
+	return config
+}
+
+// CreateWithIndexDir returns a config instance with the provided index dir
+func CreateWithIndexDir(indexDir string) *Config {
+	config := Get()
+	config.indexDir = indexDir
+	return config
+}
+
+// CreateWithTemplateDir returns a config instance with the provided template dir
+func CreateWithTemplateDir(templateDir string) *Config {
+	config := Get()
+	config.templateDir = templateDir
+	return config
 }

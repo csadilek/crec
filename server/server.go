@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 
 	"golang.org/x/text/language"
 
@@ -18,6 +19,8 @@ import (
 
 	"io/ioutil"
 
+	"crypto/aes"
+
 	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
@@ -32,25 +35,32 @@ type Server struct {
 	providers    provider.Providers    // All configured content providers
 }
 
-// Start a server which provides an API for content consumption
-func (s *Server) Start(config *config.Config, indexer *ingester.Indexer, providers provider.Providers) {
+// Create a new server instance
+func Create(config *config.Config, indexer *ingester.Indexer, providers provider.Providers) *Server {
+	s := Server{}
 	s.config = config
 	s.SetIndexer(indexer)
 	s.providers = providers
 	s.configureRecommenders()
 
-	http.HandleFunc(config.GetImportPath(), s.importContentHandler)
-	http.HandleFunc(config.GetContentPath(), s.contentHandler)
-
-	fmt.Printf("Server listening at %s\n", config.GetAddr())
-	err := http.ListenAndServe(config.GetAddr(), nil)
-	if err != nil {
-		log.Fatal("Server failed to start: ", err)
-	}
+	http.HandleFunc(config.GetImportPath(), s.handleImport)
+	http.HandleFunc(config.GetContentPath(), s.handleContent)
+	return &s
 }
 
-func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
+// Start a server which provides an API for content consumption
+func (s *Server) Start() error {
+	fmt.Printf("Server listening at %s\n", s.config.GetAddr())
+	return http.ListenAndServe(s.config.GetAddr(), nil)
+}
+
+func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
 	apikey := strings.TrimSpace(strings.TrimLeft(r.Header.Get("Authorization"), "APIKEY"))
+	if len(apikey) < aes.BlockSize {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	provider, err := GetProviderForAPIKey(apikey, s.config)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
@@ -66,7 +76,7 @@ func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Failed to read body of request.\n"))
+		w.Write([]byte("Failed to read request body.\n"))
 		return
 	}
 
@@ -80,7 +90,7 @@ func (s *Server) importContentHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 	if match := r.Header.Get("If-None-Match"); match != "" {
 		if match == s.getIndexer().GetID() {
 			w.WriteHeader(http.StatusNotModified)
@@ -128,7 +138,7 @@ func (s *Server) produceRecommendations(r *http.Request) []*content.Content {
 }
 
 func (s *Server) respondWithHTML(w http.ResponseWriter, c []*content.Content) {
-	t, err := template.ParseFiles("template/item.html")
+	t, err := template.ParseFiles(filepath.FromSlash(s.config.GetTemplateDir() + "/item.html"))
 	if err != nil {
 		log.Fatal("Failed to parse template: ", err)
 	}
