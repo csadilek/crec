@@ -29,17 +29,17 @@ import (
 
 // Server to host public API for content consumption
 type Server struct {
-	indexer      unsafe.Pointer        // Indexer providing access to content
+	index        unsafe.Pointer        // Index providing access to content
 	recommenders []content.Recommender // Array of configured content recommenders
 	config       *config.Config        // Reference to system config
 	providers    provider.Providers    // All configured content providers
 }
 
 // Create a new server instance
-func Create(config *config.Config, indexer *ingester.Indexer, providers provider.Providers) *Server {
+func Create(config *config.Config, index *ingester.Index, providers provider.Providers) *Server {
 	s := Server{}
 	s.config = config
-	s.SetIndexer(indexer)
+	s.SetIndex(index)
 	s.providers = providers
 	s.configureRecommenders()
 
@@ -92,13 +92,13 @@ func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 	if match := r.Header.Get("If-None-Match"); match != "" {
-		if match == s.getIndexer().GetID() {
+		if match == s.getIndex().GetID() {
 			w.WriteHeader(http.StatusNotModified)
 			return
 		}
 	}
 
-	w.Header().Set("Etag", s.getIndexer().GetID())
+	w.Header().Set("Etag", s.getIndex().GetID())
 	w.Header().Set("Cache-Control", "max-age="+s.config.GetClientCacheMaxAge()+", must-revalidate")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
@@ -124,10 +124,11 @@ func (s *Server) produceRecommendations(r *http.Request) []*content.Content {
 	params := make(map[string]string)
 	params["tags"] = r.URL.Query().Get("t")
 	params["query"] = r.URL.Query().Get("q")
+	params["provider"] = r.URL.Query().Get("p")
 
 	c := make([]*content.Content, 0)
 	for _, rec := range s.recommenders {
-		crec, err := rec.Recommend(s.getIndexer().GetLocalizedContent(tags), params)
+		crec, err := rec.Recommend(s.getIndex().GetLocalizedContent(tags), params)
 		if err != nil {
 			log.Println("Recommender failed: ", err)
 			continue
@@ -158,19 +159,30 @@ func (s *Server) respondWithJSON(w http.ResponseWriter, c []*content.Content) {
 	w.Write(bytes)
 }
 
-//SetIndexer atomically updates the server's indexer to reflect updated content
-func (s *Server) SetIndexer(indexer *ingester.Indexer) {
-	atomic.StorePointer(&s.indexer, unsafe.Pointer(indexer))
+//SetIndex atomically updates the server's index to reflect updated content
+func (s *Server) SetIndex(index *ingester.Index) {
+	atomic.StorePointer(&s.index, unsafe.Pointer(index))
 }
 
-func (s *Server) getIndexer() *ingester.Indexer {
-	return (*ingester.Indexer)(atomic.LoadPointer(&s.indexer))
+func (s *Server) getIndex() *ingester.Index {
+	return (*ingester.Index)(atomic.LoadPointer(&s.index))
 }
 
 func (s *Server) configureRecommenders() {
 	tagBasedRecommender := &content.TagBasedRecommender{}
-	queryBasedRecommender := &content.QueryBasedRecommender{
-		Search: func(q string) ([]*content.Content, error) { return s.getIndexer().Query(q) }}
 
-	s.recommenders = []content.Recommender{tagBasedRecommender, queryBasedRecommender}
+	queryBasedRecommender := &content.QueryBasedRecommender{
+		Search: func(q string) ([]*content.Content, error) {
+			return s.getIndex().Query(q)
+		}}
+
+	providerBasedRecommender := &content.ProviderBasedRecommender{
+		Search: func(provider string) []*content.Content {
+			return s.getIndex().GetProviderContent(provider)
+		}}
+
+	s.recommenders = []content.Recommender{
+		tagBasedRecommender,
+		queryBasedRecommender,
+		providerBasedRecommender}
 }

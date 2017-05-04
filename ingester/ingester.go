@@ -24,28 +24,38 @@ import (
 	"mozilla.org/crec/processor"
 )
 
-// Ingest contacts providers to import content into the system...
-func Ingest(config *config.Config, providers provider.Providers) *Indexer {
-	indexer := CreateIndexer(config.GetIndexDir(), config.GetIndexFile())
+// Ingest content from configured providers
+func Ingest(config *config.Config, providers provider.Providers, curIndex *Index) *Index {
+	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
 	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
 
 	for _, provider := range providers {
 		var err error
+
 		if provider.ContentURL != "" {
-			if provider.Native {
-				err = ingestNativeJSON(provider, client, indexer)
+			lastUpdated := curIndex.GetProviderLastUpdated(provider.ID)
+			nextRefresh := config.GetIndexRefreshInterval()
+
+			if int(time.Now().Add(nextRefresh).Sub(lastUpdated).Minutes()) > provider.MaxContentAge {
+				log.Println("Refreshing content from provider " + provider.ID)
+				err = ingestFromProvider(provider, client, index)
+				if err == nil {
+					index.SetProviderLastUpdated(provider.ID)
+				}
 			} else {
-				err = ingestSyndicationFeed(provider, client, indexer)
+				log.Println("Reusing content from provider " + provider.ID)
+				index.AddAll(curIndex.GetProviderContent(provider.ID))
 			}
 		} else {
-			err = ingestFromQueue(config, provider, indexer)
+			err = ingestFromQueue(config, provider, index)
 		}
+
 		if err != nil {
+			index.AddAll(curIndex.GetProviderContent(provider.ID))
 			log.Println("Failed to ingest content from provider "+provider.ID, err)
-			continue
 		}
 	}
-	return indexer
+	return index
 }
 
 // Queue content to be indexed in the next iteration
@@ -63,7 +73,17 @@ func Queue(config *config.Config, content []byte, provider string) error {
 	return err
 }
 
-func ingestFromQueue(config *config.Config, provider *provider.Provider, indexer *Indexer) error {
+func ingestFromProvider(provider *provider.Provider, client *http.Client, index *Index) error {
+	var err error
+	if provider.Native {
+		err = ingestNativeJSON(provider, client, index)
+	} else {
+		err = ingestSyndicationFeed(provider, client, index)
+	}
+	return err
+}
+
+func ingestFromQueue(config *config.Config, provider *provider.Provider, index *Index) error {
 	path := filepath.Join(config.GetImportQueueDir(), provider.ID)
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info != nil && !info.IsDir() {
@@ -77,7 +97,7 @@ func ingestFromQueue(config *config.Config, provider *provider.Provider, indexer
 				return err
 			}
 			for _, item := range content {
-				indexer.Add(&item)
+				index.Add(&item)
 			}
 		}
 		return nil
@@ -85,7 +105,7 @@ func ingestFromQueue(config *config.Config, provider *provider.Provider, indexer
 	return err
 }
 
-func ingestNativeJSON(provider *provider.Provider, client *http.Client, indexer *Indexer) error {
+func ingestNativeJSON(provider *provider.Provider, client *http.Client, index *Index) error {
 	resp, err := client.Get(provider.ContentURL)
 	if err != nil {
 		return err
@@ -104,13 +124,13 @@ func ingestNativeJSON(provider *provider.Provider, client *http.Client, indexer 
 	}
 
 	for _, item := range content {
-		indexer.Add(&item)
+		index.Add(&item)
 	}
 
 	return nil
 }
 
-func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, indexer *Indexer) error {
+func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, index *Index) error {
 	fp := gofeed.NewParser()
 	fp.Client = client
 	feed, err := fp.ParseURL(provider.ContentURL)
@@ -123,7 +143,7 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 		if err != nil {
 			return err
 		}
-		indexer.Add(newc)
+		index.Add(newc)
 	}
 
 	return nil

@@ -14,7 +14,7 @@ func TestQueryBasedRecommender(t *testing.T) {
 
 	recommender.Recommend(content, map[string]string{"query": "keyword"})
 	if searchQuery != "keyword" {
-		t.Errorf("Query function not invoked with provided query string")
+		t.Errorf("Search function not invoked with provided query string")
 	}
 }
 
@@ -35,7 +35,7 @@ func TestTagBasedRecommender(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(recs) != 1 {
-		t.Errorf("Expected exactly one recommendation, but got %v", len(recs))
+		t.Fatalf("Expected exactly one recommendation, but got %v", len(recs))
 	}
 	if recs[0].ID != "0" {
 		t.Error("Expected different recommendation")
@@ -54,7 +54,7 @@ func TestTagBasedRecommender(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(recs) != 1 {
-		t.Errorf("Expected exactly one recommendation, but got %v", len(recs))
+		t.Fatalf("Expected exactly one recommendation, but got %v", len(recs))
 	}
 	if recs[0].ID != "0" {
 		t.Error("Expected different recommendation")
@@ -66,5 +66,19 @@ func TestTagBasedRecommender(t *testing.T) {
 	}
 	if len(recs) != 2 {
 		t.Errorf("Expected exactly two recommendations, but got %v", len(recs))
+	}
+}
+
+func TestProviderBasedRecommender(t *testing.T) {
+	content := []*Content{}
+	var provider = ""
+	recommender := &ProviderBasedRecommender{Search: func(p string) []*Content {
+		provider = p
+		return []*Content{}
+	}}
+
+	recommender.Recommend(content, map[string]string{"provider": "p1"})
+	if provider != "p1" {
+		t.Errorf("Search function not invoked for expected provider")
 	}
 }

@@ -142,10 +142,11 @@ func (c *Config) GetTemplateDir() string {
 }
 
 // Create returns a config instance with the provided parameters
-func Create(secret string, templateDir string) *Config {
+func Create(secret string, templateDir string, importQueueDir string) *Config {
 	config := Get()
 	config.secret = secret
 	config.templateDir = templateDir
+	config.importQueueDir = importQueueDir
 	return config
 }
 
@@ -167,5 +168,12 @@ func CreateWithIndexDir(indexDir string) *Config {
 func CreateWithTemplateDir(templateDir string) *Config {
 	config := Get()
 	config.templateDir = templateDir
+	return config
+}
+
+// CreateWithProviderDir returns a config instance with the given provider dir
+func CreateWithProviderDir(providerDir string) *Config {
+	config := Get()
+	config.providerRegistryDir = providerDir
 	return config
 }

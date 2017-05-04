@@ -1,25 +1,28 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"net/http"
 
 	"mozilla.org/crec/config"
+	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
 	"mozilla.org/crec/provider"
 )
 
-var indexer *ingester.Indexer
+var index *ingester.Index
 var server *Server
 
 func TestMain(m *testing.M) {
-	indexer = ingester.CreateIndexer(filepath.FromSlash(os.TempDir()+"/crec-test-index"), "test.bleve")
-	config := config.Create("test-secret01234", "../template")
-	server = Create(config, indexer, provider.Providers{"test": &provider.Provider{ID: "test"}})
+	index = ingester.CreateIndex(filepath.FromSlash(os.TempDir()+"/crec-test-index"), "test.bleve")
+	config := config.Create("test-secret01234", "../template", filepath.FromSlash(os.TempDir()+"/import"))
+	server = Create(config, index, provider.Providers{"test": &provider.Provider{ID: "test"}})
 	os.Exit(m.Run())
 }
 
@@ -27,7 +30,7 @@ func TestHandleContentProcessesCacheHeaders(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetContentPath(), nil)
 
-	request.Header.Set("If-None-Match", indexer.GetID())
+	request.Header.Set("If-None-Match", index.GetID())
 	server.handleContent(recorder, request)
 	if recorder.Code != http.StatusNotModified {
 		t.Errorf("Expected 304 (Not Modified), but got %v", recorder.Code)
@@ -40,7 +43,7 @@ func TestHandleContentProcessesCacheHeaders(t *testing.T) {
 	if recorder.Code != http.StatusOK {
 		t.Errorf("Expected 200 (OK), but got %v", recorder.Code)
 	}
-	if recorder.Header().Get("Etag") != indexer.GetID() {
+	if recorder.Header().Get("Etag") != index.GetID() {
 		t.Error("Expected Etag to be set")
 	}
 	if recorder.Header().Get("Cache-Control") != "max-age="+server.config.GetClientCacheMaxAge()+", must-revalidate" {
@@ -86,6 +89,37 @@ func TestHandleContentProcessesAcceptHeaders(t *testing.T) {
 	}
 }
 
+func TestHandleContentProducesRecommendations(t *testing.T) {
+	index.Add(&content.Content{ID: "0", Tags: []string{"t1"}})
+	index.Add(&content.Content{ID: "1", Summary: "q1"})
+	index.Add(&content.Content{ID: "2", Source: "p1"})
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest("GET", server.config.GetContentPath()+"?t=t1&q=q1&p=p1", nil)
+
+	request.Header.Set("Accept", "application/json")
+	server.handleContent(recorder, request)
+	if recorder.Code != http.StatusOK {
+		t.Errorf("Expected 200 (OK), but got %v", recorder.Code)
+	}
+
+	content := make([]content.Content, 0)
+	err := json.Unmarshal(recorder.Body.Bytes(), &content)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(content) != 3 {
+		t.Errorf("Expected exactly 3 recommendations, but got %v", len(content))
+	}
+
+	for index := range content {
+		if content[index].ID != strconv.Itoa(index) {
+			t.Errorf("Expected content with ID %v, but got %v", index, content[index].ID)
+		}
+	}
+
+}
 func TestHandleImportChecksAPIKey(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetImportPath(), nil)

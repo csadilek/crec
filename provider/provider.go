@@ -14,17 +14,48 @@ import (
 
 // Provider represents a content provider.
 type Provider struct {
-	ID          string                // Unique system-wide identifier of this provider.
-	Description string                // Details about this provider.
-	URL         string                // URL of the content provider.
-	ContentURL  string                // URL to retrieve content, optional in case content is pushed.
-	Categories  []string              // Implicit content categories for this provider.
-	Processors  []string              // Chain of content processor names, executed in declaration order.
-	processors  []processor.Processor // Chain of content processors instances, executed in declaration order.
-	Native      bool                  // Native indicates whether or not this provider uses our content format.
-	Regions     []string              // Specifies the default applicable regions for this provider’s content. If omitted, content will be considered for all regions, unless specified otherwise in content.
-	Language    string                // Specifies the default applicable language for this provider’s content. If omitted, content will be considered for all languages, unless specified otherwise in content.
-	Script      string                // Specifies the default applicable script for this provider’s content. If omitted, content will be considered for all scripts, unless specified otherwise in content.
+	// Unique system-wide identifier of this provider.
+	ID string
+
+	// Details about this provider.
+	Description string
+
+	// URL of the content provider.
+	URL string
+
+	// URL to retrieve content, optional in case content is pushed.
+	ContentURL string
+
+	// Implicit content categories for this provider.
+	Categories []string
+
+	// Chain of content processor names, executed in declaration order.
+	Processors []string
+
+	// Chain of content processors instances, executed in declaration order.
+	processors []processor.Processor
+
+	// Native indicates whether or not this provider uses our content format.
+	Native bool
+
+	// Specifies the default applicable regions for this provider’s content.
+	// If omitted, content will be considered for all regions, unless
+	// specified otherwise in content.
+	Regions []string
+
+	// Specifies the default applicable language for this provider’s content.
+	// If omitted, content will be considered for all languages, unless
+	// specified otherwise in content.
+	Language string
+
+	// Specifies the default applicable script for this provider’s content.
+	// If omitted, content will be considered for all scripts, unless
+	//specified otherwise in content.
+	Script string
+
+	// Specifies the age in minutes after which this provider's content
+	// should be refreshed
+	MaxContentAge int
 }
 
 // Providers is a mapping of provider ID to instance
@@ -56,12 +87,18 @@ func readProvidersFromRegistry(providerDir string) (Providers, error) {
 		return &provider, err
 	})
 
+	if err != nil {
+		return nil, err
+	}
+
 	providerMap := make(map[string]*Provider)
 	registry := processor.GetRegistry()
 	for _, provider := range providers {
-		provider.processors = make([]processor.Processor, 0)
-		for _, name := range provider.Processors {
-			provider.processors = append(provider.processors, registry.GetNewProcessor(name))
+		if len(provider.Processors) > 0 {
+			provider.processors = make([]processor.Processor, 0)
+			for _, name := range provider.Processors {
+				provider.processors = append(provider.processors, registry.GetNewProcessor(name))
+			}
 		}
 
 		providerMap[provider.ID] = provider

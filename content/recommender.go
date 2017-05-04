@@ -61,3 +61,18 @@ func (r *QueryBasedRecommender) Recommend(all []*Content, params map[string]stri
 
 	return []*Content{}, nil
 }
+
+// ProviderBasedRecommender recommends content based on a full-text query
+type ProviderBasedRecommender struct {
+	Search func(provider string) []*Content
+}
+
+// Recommend content from the given provider
+func (r *ProviderBasedRecommender) Recommend(all []*Content, params map[string]string) ([]*Content, error) {
+	provider := params["provider"]
+	if provider != "" {
+		return r.Search(provider), nil
+	}
+
+	return []*Content{}, nil
+}

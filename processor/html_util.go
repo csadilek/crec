@@ -1,6 +1,9 @@
 package processor
 
-import "golang.org/x/net/html"
+import (
+	"github.com/andybalholm/cascadia"
+	"golang.org/x/net/html"
+)
 
 func removeNodes(context *Context, nodeNames []string) (*Context, error) {
 	if !context.HTML {
@@ -43,4 +46,22 @@ func findNodesToRemove(n *html.Node, nodeNames []string) []*html.Node {
 	}
 
 	return nodes
+}
+
+func findAttributeValueOfFirstMatch(context *Context, elem string, attr string) (string, error) {
+	if !context.HTML {
+		return "", nil
+	}
+	node := context.Content.(*html.Node)
+	img := cascadia.MustCompile(elem).MatchFirst(node)
+	if img != nil {
+		for _, a := range img.Attr {
+			if a.Key == attr {
+				if a.Val != "" {
+					return a.Val, nil
+				}
+			}
+		}
+	}
+	return "", nil
 }

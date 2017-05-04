@@ -7,20 +7,47 @@ import (
 
 // Content represents our unified data model abstracting from the various formats used by providers.
 type Content struct {
-	ID          string   `json:"id,omitempty"`          // Globally unique content identifier
-	Source      string   `json:"source,omitempty"`      // Identifier of the content provider
-	Title       string   `json:"title,omitempty"`       // Title provided for this content
-	Link        string   `json:"link,omitempty"`        // Link to a web site showing a detailed view of the content
-	Image       string   `json:"image,omitempty"`       // Image URI to a preview image
-	Summary     string   `json:"summary,omitempty"`     // Summary of the content
-	HTML        string   `json:"html,omitempty"`        // HTML view of the content
-	Explanation string   `json:"explanation,omitempty"` // Explanation as to why the content was recommended to a specific client
-	Author      string   `json:"author,omitempty"`      // Author of the content
-	Published   string   `json:"published,omitempty"`   // Publication date
-	Tags        []string `json:"tags,omitempty"`        // Tags and categories applied to this content
-	Language    string   `json:"language,omitempty"`    // Language the content is written in
-	Regions     []string `json:"regions,omitempty"`     // Regions the content is applicable to
-	Script      string   `json:"script,omitempty"`      // Script the content is written in
+	// Globally unique content identifier
+	ID string `json:"id,omitempty"`
+
+	// Identifier of the content provider
+	Source string `json:"source,omitempty"`
+
+	// Title provided for this content
+	Title string `json:"title,omitempty"`
+
+	// Link to a web site showing a detailed view of the content
+	Link string `json:"link,omitempty"`
+
+	// Image URI to a preview image
+	Image string `json:"image,omitempty"`
+
+	// Summary of the content
+	Summary string `json:"summary,omitempty"`
+
+	// HTML view of the content
+	HTML string `json:"html,omitempty"`
+
+	// Explanation as to why the content was recommended to a specific client
+	Explanation string `json:"explanation,omitempty"`
+
+	// Author of the content
+	Author string `json:"author,omitempty"`
+
+	// Publication date
+	Published string `json:"published,omitempty"`
+
+	// Tags and categories applied to this content
+	Tags []string `json:"tags,omitempty"`
+
+	// Language the content is written in
+	Language string `json:"language,omitempty"`
+
+	// Regions the content is applicable to
+	Regions []string `json:"regions,omitempty"`
+
+	// Script the content is written in
+	Script string `json:"script,omitempty"`
 }
 
 func (c *Content) String() string {

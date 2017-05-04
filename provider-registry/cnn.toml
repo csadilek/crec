@@ -5,3 +5,4 @@ ContentURL = "http://rss.cnn.com/rss/cnn_topstories.rss"
 Processors = ["ExternalLinkRemover"]
 Regions = ["US"]
 Language = "en"
+MaxContentAge = 3

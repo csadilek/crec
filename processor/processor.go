@@ -4,11 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/andybalholm/cascadia"
-
 	"log"
-
-	"golang.org/x/net/html"
 )
 
 // Registry manages a global mapping of process names to types
@@ -75,26 +71,13 @@ type ImageExtractor struct{}
 
 // Process the provided content
 func (p ImageExtractor) Process(context *Context) (*Context, error) {
-	if !context.HTML {
-		return context, nil
+	val, err := findAttributeValueOfFirstMatch(context, "img", "src")
+	if err != nil {
+		return nil, err
 	}
-	node := context.Content.(*html.Node)
-	img := cascadia.MustCompile("img").MatchFirst(node)
-	if img != nil {
-		for _, a := range img.Attr {
-			if a.Key == "src" {
-				if a.Val != "" {
-					var src string
-					if !strings.HasPrefix(a.Val, "http:") {
-						src = "http:" + a.Val
-					} else {
-						src = a.Val
-					}
-					context.Result["image"] = src
-					break
-				}
-			}
-		}
+	if !strings.HasPrefix(val, "http:") {
+		val = "http:" + val
 	}
+	context.Result["image"] = val
 	return context, nil
 }
