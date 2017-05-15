@@ -22,9 +22,9 @@ type Config struct {
 	importQueueDir                string
 	indexDir                      string
 	indexFile                     string
-	indexRefreshIntervalInMinutes int
+	indexRefreshIntervalInMinutes int64
 	providerRegistryDir           string
-	clientCacheMaxAgeInSeconds    int
+	clientCacheMaxAgeInSeconds    int64
 	templateDir                   string
 }
 
@@ -40,9 +40,9 @@ func (c *Config) UnmarshalTOML(data interface{}) error {
 	c.maybeUpdateConfig(d, "ImportQueueDir", func(val interface{}) { c.importQueueDir = val.(string) })
 	c.maybeUpdateConfig(d, "IndexDir", func(val interface{}) { c.indexDir = val.(string) })
 	c.maybeUpdateConfig(d, "IndexFile", func(val interface{}) { c.indexFile = val.(string) })
-	c.maybeUpdateConfig(d, "IndexRefreshIntervalInMinutes", func(val interface{}) { c.indexRefreshIntervalInMinutes = val.(int) })
+	c.maybeUpdateConfig(d, "IndexRefreshIntervalInMinutes", func(val interface{}) { c.indexRefreshIntervalInMinutes = val.(int64) })
 	c.maybeUpdateConfig(d, "ProviderRegistryDir", func(val interface{}) { c.providerRegistryDir = val.(string) })
-	c.maybeUpdateConfig(d, "ClientCacheMaxAgeInSeconds", func(val interface{}) { c.clientCacheMaxAgeInSeconds = val.(int) })
+	c.maybeUpdateConfig(d, "ClientCacheMaxAgeInSeconds", func(val interface{}) { c.clientCacheMaxAgeInSeconds = val.(int64) })
 	c.maybeUpdateConfig(d, "TemplateDir", func(val interface{}) { c.templateDir = val.(string) })
 	return nil
 }
@@ -133,7 +133,7 @@ func (c *Config) GetIndexRefreshInterval() time.Duration {
 
 // GetClientCacheMaxAge returns the configured cache control max age
 func (c *Config) GetClientCacheMaxAge() string {
-	return strconv.Itoa(c.clientCacheMaxAgeInSeconds)
+	return strconv.Itoa(int(c.clientCacheMaxAgeInSeconds))
 }
 
 // GetTemplateDir returns the configured html template directory

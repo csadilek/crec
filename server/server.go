@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"path/filepath"
 
@@ -50,7 +49,7 @@ func Create(config *config.Config, index *ingester.Index, providers provider.Pro
 
 // Start a server which provides an API for content consumption
 func (s *Server) Start() error {
-	fmt.Printf("Server listening at %s\n", s.config.GetAddr())
+	log.Printf("Server listening at %s\n", s.config.GetAddr())
 	return http.ListenAndServe(s.config.GetAddr(), nil)
 }
 

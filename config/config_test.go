@@ -30,8 +30,8 @@ func TestUnmarshalTOML(t *testing.T) {
 		"ImportQueueDir":                "_importQueueDir",
 		"IndexDir":                      "_indexDir",
 		"IndexFile":                     "_indexFile",
-		"IndexRefreshIntervalInMinutes": 1,
-		"ClientCacheMaxAgeInSeconds":    2,
+		"IndexRefreshIntervalInMinutes": int64(1),
+		"ClientCacheMaxAgeInSeconds":    int64(2),
 		"ProviderRegistryDir":           "_providerRegistryDir",
 		"TemplateDir":                   "template"}
 
@@ -42,8 +42,8 @@ func TestUnmarshalTOML(t *testing.T) {
 		importQueueDir:                "_importQueueDir",
 		indexDir:                      "_indexDir",
 		indexFile:                     "_indexFile",
-		indexRefreshIntervalInMinutes: 1,
-		clientCacheMaxAgeInSeconds:    2,
+		indexRefreshIntervalInMinutes: int64(1),
+		clientCacheMaxAgeInSeconds:    int64(2),
 		providerRegistryDir:           "_providerRegistryDir",
 		templateDir:                   "template"}
 
