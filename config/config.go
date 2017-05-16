@@ -113,7 +113,7 @@ func (c *Config) GetIndexDir() string {
 
 // GetIndexFile returns the path to store the index e.g. crec.bleve
 func (c *Config) GetIndexFile() string {
-	return c.indexDir
+	return c.indexFile
 }
 
 // GetProviderRegistryDir returns the directy path containing provider configurations e.g. provider-registry
