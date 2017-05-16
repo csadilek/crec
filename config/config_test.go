@@ -86,6 +86,35 @@ func TestGetterMethods(t *testing.T) {
 	assertEquals(t, config.secret, config.GetSecret())
 }
 
+func TestCreateMethods(t *testing.T) {
+	c := CreateWithIndexDir("indexDir")
+	if c.indexDir != "indexDir" {
+		t.Error("Failed to create config with index dir")
+	}
+
+	c = CreateWithProviderDir("providerDir")
+	if c.providerRegistryDir != "providerDir" {
+		t.Error("Filed to create config with provider dir")
+	}
+
+	c = CreateWithSecret("secret")
+	if c.secret != "secret" {
+		t.Error("Filed to create config with secret")
+	}
+
+	c = Create("secret", "templateDir", "importQueueDir")
+	if c.secret != "secret" {
+		t.Error("Filed to create config with secret")
+	}
+	if c.templateDir != "templateDir" {
+		t.Error("Filed to create config with template dir")
+	}
+	if c.importQueueDir != "importQueueDir" {
+		t.Error("Filed to create config with import queue dir")
+	}
+
+}
+
 func assertEquals(t *testing.T, want interface{}, got interface{}) {
 	if want != got {
 		t.Errorf("Expected %v, but got %v", want, got)

@@ -164,13 +164,6 @@ func CreateWithIndexDir(indexDir string) *Config {
 	return config
 }
 
-// CreateWithTemplateDir returns a config instance with the provided template dir
-func CreateWithTemplateDir(templateDir string) *Config {
-	config := Get()
-	config.templateDir = templateDir
-	return config
-}
-
 // CreateWithProviderDir returns a config instance with the given provider dir
 func CreateWithProviderDir(providerDir string) *Config {
 	config := Get()
