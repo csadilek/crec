@@ -19,6 +19,7 @@ func TestMain(m *testing.M) {
 
 func tearDown() {
 	RemoveAll(config.CreateWithIndexDir("crec-test-index"))
+	os.RemoveAll(config.Get().GetImportQueueDir())
 }
 
 func TestGetID(t *testing.T) {
@@ -80,7 +81,12 @@ func TestGetLocalizedContent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = index.Add(&content.Content{ID: "1", Title: "de-at", Summary: "eine kurzfassung", Language: "de", Regions: []string{"AT"}})
+	err = index.Add(&content.Content{
+		ID:       "1",
+		Title:    "de-at",
+		Summary:  "eine kurzfassung",
+		Language: "de",
+		Regions:  []string{"AT"}})
 	if err != nil {
 		t.Fatal(err)
 	}

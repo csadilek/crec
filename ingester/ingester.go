@@ -52,7 +52,7 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 
 		if err != nil {
 			index.AddAll(curIndex.GetProviderContent(provider.ID))
-			log.Println("Failed to ingest content from provider "+provider.ID, err)
+			log.Printf("Failed to ingest content from provider %v: %v", provider.ID, err)
 		}
 	}
 	return index
