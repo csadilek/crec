@@ -126,13 +126,20 @@ func (s *Server) produceRecommendations(r *http.Request) []*content.Content {
 	params["provider"] = r.URL.Query().Get("p")
 
 	c := make([]*content.Content, 0)
+	cDedupe := make(map[string]bool)
 	for _, rec := range s.recommenders {
 		crec, err := rec.Recommend(s.getIndex().GetLocalizedContent(tags), params)
 		if err != nil {
 			log.Println("Recommender failed: ", err)
 			continue
 		}
-		c = append(c, crec...)
+		for _, rec := range crec {
+			if _, ok := cDedupe[rec.ID]; !ok {
+				cDedupe[rec.ID] = true
+				c = append(c, rec)
+			}
+		}
+
 	}
 	return c
 }

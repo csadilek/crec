@@ -118,8 +118,39 @@ func TestHandleContentProducesRecommendations(t *testing.T) {
 			t.Errorf("Expected content with ID %v, but got %v", index, content[index].ID)
 		}
 	}
-
 }
+
+func TestHandleContentProducesUniqueRecommendations(t *testing.T) {
+	index.Add(&content.Content{ID: "0", Tags: []string{"t1"}, Summary: "q1"})
+	index.Add(&content.Content{ID: "1", Summary: "q1"})
+	index.Add(&content.Content{ID: "2", Source: "p1", Summary: "q1"})
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest("GET", server.config.GetContentPath()+"?t=t1&q=q1&p=p1", nil)
+
+	request.Header.Set("Accept", "application/json")
+	server.handleContent(recorder, request)
+	if recorder.Code != http.StatusOK {
+		t.Errorf("Expected 200 (OK), but got %v", recorder.Code)
+	}
+
+	content := make([]content.Content, 0)
+	err := json.Unmarshal(recorder.Body.Bytes(), &content)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(content) != 3 {
+		t.Errorf("Expected exactly 3 recommendations, but got %v", len(content))
+	}
+
+	for index := range content {
+		if content[index].ID != strconv.Itoa(index) {
+			t.Errorf("Expected content with ID %v, but got %v", index, content[index].ID)
+		}
+	}
+}
+
 func TestHandleImportChecksAPIKey(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetImportPath(), nil)
