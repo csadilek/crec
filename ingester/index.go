@@ -2,7 +2,6 @@ package ingester
 
 import (
 	"log"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/nu7hatch/gouuid"
 	"golang.org/x/text/language"
-	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
 )
 
@@ -54,12 +52,6 @@ func CreateIndex(indexRoot string, indexFile string) *Index {
 		regions:              make(map[string][]*content.Content),
 		scripts:              make(map[string][]*content.Content),
 		fullText:             bleveIndex}
-}
-
-// RemoveAll deletes all existing indexes
-func RemoveAll(config *config.Config) error {
-	err := os.RemoveAll(config.GetIndexDir())
-	return err
 }
 
 // AddAll adds the provided content items to this index

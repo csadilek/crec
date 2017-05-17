@@ -11,6 +11,7 @@ import (
 	"log"
 
 	"mozilla.org/crec/config"
+	"mozilla.org/crec/provider"
 )
 
 // GenerateAPIKey returns an API key for the provider
@@ -51,4 +52,12 @@ func GetProviderForAPIKey(key string, config *config.Config) (string, error) {
 	cfb := cipher.NewCFBDecrypter(block, iv)
 	cfb.XORKeyStream(provider, provider)
 	return string(provider), nil
+}
+
+// PrintAPIKeys prints all providers with their corresponding API keys
+func PrintAPIKeys(providers provider.Providers, config *config.Config) {
+	for provider := range providers {
+		apiKey := GenerateAPIKey(provider, config)
+		log.Printf("Found provider %v (API key: %v)\n", provider, apiKey)
+	}
 }

@@ -26,9 +26,9 @@ import (
 
 // Ingest content from configured providers
 func Ingest(config *config.Config, providers provider.Providers, curIndex *Index) *Index {
-	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
-	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
+	CleanUp(config, curIndex)
 
+	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
 	for _, provider := range providers {
 		var err error
 
@@ -38,7 +38,7 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 
 			if int(time.Now().Add(nextRefresh).Sub(lastUpdated).Minutes()) > provider.MaxContentAge {
 				log.Println("Refreshing content from provider " + provider.ID)
-				err = ingestFromProvider(provider, client, index)
+				err = ingestFromProvider(provider, index)
 				if err == nil {
 					index.SetProviderLastUpdated(provider.ID)
 				}
@@ -58,7 +58,7 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 	return index
 }
 
-// Queue content to be indexed in the next iteration
+// Queue content to be ingested in the next iteration
 func Queue(config *config.Config, content []byte, provider string) error {
 	path := filepath.Join(config.GetImportQueueDir(), provider)
 	err := os.MkdirAll(path, os.ModePerm)
@@ -73,7 +73,25 @@ func Queue(config *config.Config, content []byte, provider string) error {
 	return err
 }
 
-func ingestFromProvider(provider *provider.Provider, client *http.Client, index *Index) error {
+// CleanUp deletes all but the current active index
+func CleanUp(config *config.Config, curIndex *Index) {
+	indexDirs, err := ioutil.ReadDir(config.GetIndexDir())
+	if err != nil {
+		log.Println("Failed to clean up old indexes: ", err)
+	}
+
+	for _, indexDir := range indexDirs {
+		if indexDir.Name() != curIndex.GetID() {
+			err = os.RemoveAll(filepath.FromSlash(config.GetIndexDir() + "/" + indexDir.Name()))
+			if err != nil {
+				log.Println("Failed to clean up old indexes: ", err)
+			}
+		}
+	}
+}
+
+func ingestFromProvider(provider *provider.Provider, index *Index) error {
+	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
 	var err error
 	if provider.Native {
 		err = ingestNativeJSON(provider, client, index)

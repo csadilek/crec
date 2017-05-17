@@ -35,7 +35,7 @@ type Server struct {
 }
 
 // Create a new server instance
-func Create(config *config.Config, index *ingester.Index, providers provider.Providers) *Server {
+func Create(config *config.Config, providers provider.Providers, index *ingester.Index) *Server {
 	s := Server{}
 	s.config = config
 	s.SetIndex(index)
