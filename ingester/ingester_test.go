@@ -56,7 +56,7 @@ func testIngesterReusesExistingContent(t *testing.T, p *provider.Provider) {
 
 func TestIngestFromQueue(t *testing.T) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	providers := provider.Providers{"test": &provider.Provider{ID: "test"}}
+	providers := provider.Providers{"test": &provider.Provider{ID: "test", Domains: map[string]float32{"d": 0.9}}}
 
 	err := Queue(config, []byte(`[{"id":"0"}]`), "test")
 	if err != nil {
@@ -69,23 +69,25 @@ func TestIngestFromQueue(t *testing.T) {
 	if len(content) != 1 {
 		t.Fatalf("Expected new index to contain content of length 1, but got %v", len(content))
 	}
-
 	if content[0].ID != "0" {
 		t.Errorf("Invalid content. Expected content with ID 0, but got %v", content[0].ID)
 	}
+	if content[0].Domains["d"] != 0.9 {
+		t.Errorf("Expected provider domains to be present in content")
+	}
 }
 
-func TestIngestNativeJSON(t *testing.T) {
+func TestIngestNative(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `[{"id":"0"}]`)
 	}))
 	defer ts.Close()
 
-	p := &provider.Provider{ID: "test", ContentURL: ts.URL}
+	p := &provider.Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
 
-	err := ingestNativeJSON(p, &http.Client{}, index)
+	err := ingestNative(p, &http.Client{}, index)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,6 +99,9 @@ func TestIngestNativeJSON(t *testing.T) {
 	if content[0].ID != "0" {
 		t.Errorf("Invalid content. Expected content with ID 0, but got %v", content[0].ID)
 	}
+	if content[0].Domains["d"] != 0.9 {
+		t.Errorf("Expected provider domains to be present in content")
+	}
 }
 
 func TestIngestSyndicationFeed(t *testing.T) {
@@ -105,7 +110,7 @@ func TestIngestSyndicationFeed(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	p := &provider.Provider{ID: "test", ContentURL: ts.URL}
+	p := &provider.Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
 
@@ -120,5 +125,8 @@ func TestIngestSyndicationFeed(t *testing.T) {
 	}
 	if content[0].ID != "0" {
 		t.Errorf("Invalid content. Expected content with ID 0, but got %v", content[0].ID)
+	}
+	if content[0].Domains["d"] != 0.9 {
+		t.Errorf("Expected provider domains to be present in content")
 	}
 }

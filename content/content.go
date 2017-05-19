@@ -48,6 +48,12 @@ type Content struct {
 
 	// Script the content is written in
 	Script string `json:"script,omitempty"`
+
+	// Specifies the domain similarities of this content. The domain
+	// name is used as key, the weight as value. This can be used
+	// to map content to specific user interests i.e. based on
+	// their browsing history.
+	Domains map[string]float32
 }
 
 func (c *Content) String() string {

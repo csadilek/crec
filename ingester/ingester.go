@@ -94,7 +94,7 @@ func ingestFromProvider(provider *provider.Provider, index *Index) error {
 	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
 	var err error
 	if provider.Native {
-		err = ingestNativeJSON(provider, client, index)
+		err = ingestNative(provider, client, index)
 	} else {
 		err = ingestSyndicationFeed(provider, client, index)
 	}
@@ -109,13 +109,10 @@ func ingestFromQueue(config *config.Config, provider *provider.Provider, index *
 			if err != nil {
 				return err
 			}
-			content := make([]content.Content, 0)
-			err = json.Unmarshal(bytes, &content)
+
+			err = ingestJSON(bytes, provider, index)
 			if err != nil {
 				return err
-			}
-			for _, item := range content {
-				index.Add(&item)
 			}
 		}
 		return nil
@@ -123,7 +120,7 @@ func ingestFromQueue(config *config.Config, provider *provider.Provider, index *
 	return err
 }
 
-func ingestNativeJSON(provider *provider.Provider, client *http.Client, index *Index) error {
+func ingestNative(provider *provider.Provider, client *http.Client, index *Index) error {
 	resp, err := client.Get(provider.ContentURL)
 	if err != nil {
 		return err
@@ -135,13 +132,20 @@ func ingestNativeJSON(provider *provider.Provider, client *http.Client, index *I
 		return err
 	}
 
+	return ingestJSON(body, provider, index)
+}
+
+func ingestJSON(bytes []byte, provider *provider.Provider, index *Index) error {
 	var content []content.Content
-	err = json.Unmarshal(body, &content)
+	err := json.Unmarshal(bytes, &content)
 	if err != nil {
 		return err
 	}
 
 	for _, item := range content {
+		if len(item.Domains) == 0 {
+			item.Domains = provider.Domains
+		}
 		index.Add(&item)
 	}
 
@@ -200,7 +204,8 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		Published: item.Published,
 		Regions:   provider.Regions,
 		Language:  provider.Language,
-		Script:    provider.Script}
+		Script:    provider.Script,
+		Domains:   provider.Domains}
 	return newc, nil
 }
 
