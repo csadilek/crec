@@ -6,3 +6,4 @@ Processors = ["ExternalLinkRemover"]
 Regions = ["US"]
 Language = "en"
 MaxContentAge = 3
+Domains = {"orf.at"=0.9, "news.google.com"=0.8}

@@ -50,12 +50,18 @@ type Provider struct {
 
 	// Specifies the default applicable script for this provider’s content.
 	// If omitted, content will be considered for all scripts, unless
-	//specified otherwise in content.
+	// specified otherwise in content.
 	Script string
 
 	// Specifies the age in minutes after which this provider's content
-	// should be refreshed
+	// should be refreshed.
 	MaxContentAge int
+
+	// Specifies the default domain similarities of this provider. The domain
+	// name is used as key, the weight as value. This can be used on the client
+	// to map content of this provider to specific user interests i.e. based on
+	// their browsing history.
+	Domains map[string]float32
 }
 
 // Providers is a mapping of provider ID to instance

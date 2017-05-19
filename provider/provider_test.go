@@ -53,7 +53,8 @@ func createProvider(id string) string {
 		"Language=\"l1\"\n" +
 		"Regions=[\"r1\",\"r2\"]\n" +
 		"Script=\"s1\"\n" +
-		"MaxContentAge=1"
+		"MaxContentAge=1\n" +
+		"Domains={\"bbc.co.uk\"=0.9, \"news.google.com\"=0.8}"
 }
 
 func TestGetProviders(t *testing.T) {
@@ -77,7 +78,8 @@ func TestGetProviders(t *testing.T) {
 		Processors:    []string{},
 		Regions:       []string{"r1", "r2"},
 		Script:        "s1",
-		MaxContentAge: 1}
+		MaxContentAge: 1,
+		Domains:       map[string]float32{"bbc.co.uk": 0.9, "news.google.com": 0.8}}
 	got := providers["p1"]
 
 	if !reflect.DeepEqual(want, got) {
@@ -93,7 +95,8 @@ func TestGetProviders(t *testing.T) {
 		Processors:    []string{},
 		Regions:       []string{"r1", "r2"},
 		Script:        "s1",
-		MaxContentAge: 1}
+		MaxContentAge: 1,
+		Domains:       map[string]float32{"bbc.co.uk": 0.9, "news.google.com": 0.8}}
 	got = providers["p2"]
 
 	if !reflect.DeepEqual(want, got) {
