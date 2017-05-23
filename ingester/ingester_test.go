@@ -60,7 +60,7 @@ func TestIngestFromQueue(t *testing.T) {
 
 	err := Queue(config, []byte(`[{"id":"0"}]`), "test")
 	if err != nil {
-		t.Errorf("Failed to queue content for ingestion: %v", err)
+		t.Errorf("Failed to enqueue content for ingestion: %v", err)
 	}
 
 	newIndex := Ingest(config, providers, &Index{})

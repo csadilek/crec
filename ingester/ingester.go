@@ -75,14 +75,10 @@ func Queue(config *config.Config, content []byte, provider string) error {
 
 // CleanUp deletes all but the current active index
 func CleanUp(config *config.Config, curIndex *Index) {
-	indexDirs, err := ioutil.ReadDir(config.GetIndexDir())
-	if err != nil {
-		log.Println("Failed to clean up old indexes: ", err)
-	}
-
+	indexDirs, _ := ioutil.ReadDir(config.GetIndexDir())
 	for _, indexDir := range indexDirs {
 		if indexDir.Name() != curIndex.GetID() {
-			err = os.RemoveAll(filepath.FromSlash(config.GetIndexDir() + "/" + indexDir.Name()))
+			err := os.RemoveAll(filepath.FromSlash(config.GetIndexDir() + "/" + indexDir.Name()))
 			if err != nil {
 				log.Println("Failed to clean up old indexes: ", err)
 			}

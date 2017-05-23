@@ -20,7 +20,7 @@ type Provider struct {
 	// Details about this provider.
 	Description string
 
-	// URL of the content provider.
+	// URL of this content provider.
 	URL string
 
 	// URL to retrieve content, optional in case content is pushed.
@@ -53,7 +53,7 @@ type Provider struct {
 	// specified otherwise in content.
 	Script string
 
-	// Specifies the age in minutes after which this provider's content
+	// Specifies the time in minutes after which this provider's content
 	// should be refreshed.
 	MaxContentAge int
 
