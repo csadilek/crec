@@ -25,7 +25,6 @@ func TestMain(m *testing.M) {
 	server = Create(config, provider.Providers{"test": &provider.Provider{ID: "test"}}, index)
 	os.Exit(m.Run())
 }
-
 func TestHandleContentProcessesCacheHeaders(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetContentPath(), nil)
@@ -50,7 +49,6 @@ func TestHandleContentProcessesCacheHeaders(t *testing.T) {
 		t.Errorf("Unexpected Cache-Control header: %v", recorder.Header().Get("Cache-Control"))
 	}
 }
-
 func TestHandleContentProcessesAcceptHeaders(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetContentPath(), nil)
@@ -88,7 +86,6 @@ func TestHandleContentProcessesAcceptHeaders(t *testing.T) {
 		t.Errorf("Expected 200 (OK), but got %v", recorder.Code)
 	}
 }
-
 func TestHandleContentProducesRecommendations(t *testing.T) {
 	index.Add(&content.Content{ID: "0", Tags: []string{"t1"}})
 	index.Add(&content.Content{ID: "1", Summary: "q1"})
@@ -119,7 +116,6 @@ func TestHandleContentProducesRecommendations(t *testing.T) {
 		}
 	}
 }
-
 func TestHandleContentProducesUniqueRecommendations(t *testing.T) {
 	index.Add(&content.Content{ID: "0", Tags: []string{"t1"}, Summary: "q1"})
 	index.Add(&content.Content{ID: "1", Summary: "q1"})
@@ -150,7 +146,6 @@ func TestHandleContentProducesUniqueRecommendations(t *testing.T) {
 		}
 	}
 }
-
 func TestHandleImportChecksAPIKey(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetImportPath(), nil)

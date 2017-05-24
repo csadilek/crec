@@ -18,8 +18,6 @@ import (
 
 	"io/ioutil"
 
-	"crypto/aes"
-
 	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
@@ -55,10 +53,6 @@ func (s *Server) Start() error {
 
 func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
 	apikey := strings.TrimSpace(strings.TrimLeft(r.Header.Get("Authorization"), "APIKEY"))
-	if len(apikey) < aes.BlockSize {
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
 
 	provider, err := GetProviderForAPIKey(apikey, s.config)
 	if err != nil {

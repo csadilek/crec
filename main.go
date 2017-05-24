@@ -25,8 +25,8 @@ func main() {
 	if *apiKeys {
 		server.PrintAPIKeys(providers, config)
 	}
-	index := ingester.Ingest(config, providers, &ingester.Index{})
 
+	index := ingester.Ingest(config, providers, &ingester.Index{})
 	server := server.Create(config, providers, index)
 	ticker := time.NewTicker(config.GetIndexRefreshInterval())
 	go func() {

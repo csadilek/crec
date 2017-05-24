@@ -10,6 +10,8 @@ import (
 
 	"log"
 
+	"errors"
+
 	"mozilla.org/crec/config"
 	"mozilla.org/crec/provider"
 )
@@ -35,6 +37,10 @@ func GenerateAPIKey(provider string, config *config.Config) string {
 
 // GetProviderForAPIKey returns the provider the key was generated for
 func GetProviderForAPIKey(key string, config *config.Config) (string, error) {
+	if len(key) < aes.BlockSize {
+		return "", errors.New("Invalid key length")
+	}
+
 	for i := 0; i < len(key)%4; i++ {
 		key = key + "="
 	}
