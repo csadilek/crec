@@ -81,7 +81,7 @@ func (i *Index) Add(c *content.Content) error {
 	indexLocaleValue(c.Language, c, i.languages)
 	indexLocaleValue(c.Script, c, i.scripts)
 
-	return i.fullText.Index(c.ID, c.Summary)
+	return i.fullText.Index(c.ID, c.Title+" "+c.Summary)
 }
 
 // Query index for content

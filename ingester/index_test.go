@@ -57,6 +57,21 @@ func TestAddAndQueryContent(t *testing.T) {
 	}
 }
 
+func TestAddAndQueryTitle(t *testing.T) {
+	index := CreateIndex(filepath.FromSlash(os.TempDir()+"/crec-test-index"), "test.bleve")
+	err := index.Add(&content.Content{ID: "0", Title: "a title", Summary: "a summary"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hits, err := index.Query("title")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(hits) != 1 {
+		t.Errorf("Expected exactly one hit, but got %v", len(hits))
+	}
+}
+
 func TestAddAll(t *testing.T) {
 	index := CreateIndex(filepath.FromSlash(os.TempDir()+"/crec-test-index"), "test.bleve")
 	err := index.AddAll([]*content.Content{
