@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/html"
 
@@ -29,32 +30,41 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 	CleanUp(config, curIndex)
 
 	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
-	for _, provider := range providers {
-		var err error
 
-		if provider.ContentURL != "" {
-			lastUpdated := curIndex.GetProviderLastUpdated(provider.ID)
-			nextRefresh := config.GetIndexRefreshInterval()
+	var wg sync.WaitGroup
+	wg.Add(len(providers))
+	for _, p := range providers {
+		go func(provider *provider.Provider) {
+			defer wg.Done()
+			var err error
 
-			if int(time.Now().Add(nextRefresh).Sub(lastUpdated).Minutes()) > provider.MaxContentAge {
-				log.Println("Refreshing content from provider " + provider.ID)
-				err = ingestFromProvider(provider, index)
-				if err == nil {
-					index.SetProviderLastUpdated(provider.ID)
+			if provider.ContentURL != "" {
+				lastUpdated := curIndex.GetProviderLastUpdated(provider.ID)
+				nextRefresh := config.GetIndexRefreshInterval()
+
+				if int(time.Now().Add(nextRefresh).Sub(lastUpdated).Minutes()) > provider.MaxContentAge {
+					log.Println("Refreshing content from provider " + provider.ID)
+					err = ingestFromProvider(provider, index)
+					if err == nil {
+						index.SetProviderLastUpdated(provider.ID)
+					}
+				} else {
+					log.Println("Reusing content from provider " + provider.ID)
+					index.AddAll(curIndex.GetProviderContent(provider.ID))
 				}
 			} else {
-				log.Println("Reusing content from provider " + provider.ID)
-				index.AddAll(curIndex.GetProviderContent(provider.ID))
+				err = ingestFromQueue(config, provider, index)
 			}
-		} else {
-			err = ingestFromQueue(config, provider, index)
-		}
 
-		if err != nil {
-			index.AddAll(curIndex.GetProviderContent(provider.ID))
-			log.Printf("Failed to ingest content from provider %v: %v", provider.ID, err)
-		}
+			if err != nil {
+				index.AddAll(curIndex.GetProviderContent(provider.ID))
+				log.Printf("Failed to refresh content from provider %v: %v", provider.ID, err)
+			}
+		}(p)
 	}
+	wg.Wait()
+	log.Println("Indexing complete")
+
 	return index
 }
 
