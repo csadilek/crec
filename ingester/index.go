@@ -16,7 +16,7 @@ import (
 // Index responsible for indexing content
 type Index struct {
 	id                   string
-	content              []*content.Content
+	allContent           []*content.Content
 	contentMap           map[string]*content.Content
 	providers            map[string][]*content.Content
 	providersLastUpdated map[string]time.Time
@@ -44,7 +44,7 @@ func CreateIndex(indexRoot string, indexFile string) *Index {
 
 	return &Index{
 		id:                   u.String(),
-		content:              make([]*content.Content, 0),
+		allContent:           make([]*content.Content, 0),
 		contentMap:           make(map[string]*content.Content),
 		providers:            make(map[string][]*content.Content),
 		providersLastUpdated: make(map[string]time.Time),
@@ -67,7 +67,7 @@ func (i *Index) AddAll(c []*content.Content) error {
 
 // Add content to index
 func (i *Index) Add(c *content.Content) error {
-	i.content = append(i.content, c)
+	i.allContent = append(i.allContent, c)
 	i.contentMap[c.ID] = c
 	i.providers[c.Source] = append(i.providers[c.Source], c)
 
@@ -110,13 +110,13 @@ func (i *Index) GetID() string {
 
 // GetContent returns all indexed content
 func (i *Index) GetContent() []*content.Content {
-	return i.content
+	return i.allContent
 }
 
 // GetLocalizedContent returns indexed content matching the provided language, script and regions
 func (i *Index) GetLocalizedContent(tags []language.Tag) []*content.Content {
 	if len(tags) == 0 {
-		return i.content
+		return i.allContent
 	}
 
 	c := make([]*content.Content, 0)

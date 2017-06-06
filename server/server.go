@@ -18,6 +18,8 @@ import (
 
 	"io/ioutil"
 
+	"reflect"
+
 	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
@@ -91,11 +93,13 @@ func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Etag", s.getIndex().GetID())
-	w.Header().Set("Cache-Control", "max-age="+s.config.GetClientCacheMaxAge()+", must-revalidate")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	c := s.produceRecommendations(r)
+	c, hadErrors := s.produceRecommendations(r)
+	if !hadErrors {
+		w.Header().Set("Etag", s.getIndex().GetID())
+		w.Header().Set("Cache-Control", "max-age="+s.config.GetClientCacheMaxAge()+", must-revalidate")
+	}
 
 	format := r.URL.Query().Get("f")
 	acceptHeader := r.Header.Get("Accept")
@@ -111,7 +115,7 @@ func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) produceRecommendations(r *http.Request) []*content.Content {
+func (s *Server) produceRecommendations(r *http.Request) ([]*content.Content, bool) {
 	tags, _, _ := language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
 
 	params := make(map[string]string)
@@ -121,10 +125,12 @@ func (s *Server) produceRecommendations(r *http.Request) []*content.Content {
 
 	c := make([]*content.Content, 0)
 	cDedupe := make(map[string]bool)
+	hadErrors := false
 	for _, rec := range s.recommenders {
 		crec, err := rec.Recommend(s.getIndex().GetLocalizedContent(tags), params)
 		if err != nil {
-			log.Println("Recommender failed: ", err)
+			log.Printf("%v failed: %v\n", reflect.TypeOf(rec).Elem().Name(), err)
+			hadErrors = true
 			continue
 		}
 		for _, rec := range crec {
@@ -135,7 +141,7 @@ func (s *Server) produceRecommendations(r *http.Request) []*content.Content {
 		}
 
 	}
-	return c
+	return c, hadErrors
 }
 
 func (s *Server) respondWithHTML(w http.ResponseWriter, c []*content.Content) {

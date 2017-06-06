@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -168,5 +169,27 @@ func TestHandleImportChecksAPIKey(t *testing.T) {
 	server.handleImport(recorder, request)
 	if recorder.Code != http.StatusOK {
 		t.Errorf("Expected 200 (Status OK), but got %v", recorder.Code)
+	}
+}
+func TestCacheHeadersOmittedIfRecommenderFailing(t *testing.T) {
+	failingRecommender := &content.QueryBasedRecommender{Search: func(q string) ([]*content.Content, error) {
+		return nil, errors.New("Expected error for testing purposes")
+	}}
+	server.recommenders = append(server.recommenders, failingRecommender)
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest("GET", server.config.GetContentPath()+"?t=t1&q=q1&p=p1", nil)
+
+	request.Header.Set("If-None-Match", "no-match")
+	request.Header.Set("Accept", "application/json")
+	server.handleContent(recorder, request)
+	if recorder.Code != http.StatusOK {
+		t.Errorf("Expected 200 (OK), but got %v", recorder.Code)
+	}
+	if recorder.Header().Get("Etag") != "" {
+		t.Error("Expected Etag to be empty")
+	}
+	if recorder.Header().Get("Cache-Control") != "" {
+		t.Errorf("Expected Cache-Control header to be empty")
 	}
 }
