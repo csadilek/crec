@@ -1,18 +1,37 @@
-#Rename to config.toml to provide custom configuation.
+# Rename to config.toml to provide custom configuration.
 
-#NEVER commit/push to GitHub!
+# Secret used for API key generation. Don't push real value to GitHub!
 Secret="Pssst!0123456789"
 
-#Examples below show the system defaults:
+# Examples below show the system defaults if config omitted:
+# ----------------------------------------------------------
+
+# Address and port used for starting up content server
 ServerAddr=":8080"
+
+# URL path for fetching content
 ServerContentPath="/crec/content"
+
+# URL path to import content
 ServerImportPath="/crec/import"
 
+# Directory to store imported content
 ImportQueueDir="import"
-IndexDir="index"
-IndexFile="crec.bleve"
+
+# Wheter or not a full-text index should be created
+FullTextIndex=true
+
+# Directory to store full-text index
+FullTextIndexDir="index"
+
+# File to store full-text index in $FullTextIndexDir
+FullTextIndexFile="crec.bleve"
+
+# Interval in minutes used to refresh content
 IndexRefreshIntervalInMinutes=5
 
+# Max-age used for client-side caching
 ClientCacheMaxAgeInSeconds=120
 
+# Directory to store the content provider configurations
 ProviderRegistryDir="provider-registry"

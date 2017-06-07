@@ -11,8 +11,9 @@ func TestGetConfigReturnsMeaningfulDefaults(t *testing.T) {
 		serverContentPath:             "/crec/content",
 		serverImportPath:              "/crec/import",
 		importQueueDir:                "import",
-		indexDir:                      "index",
-		indexFile:                     "crec.bleve",
+		fullTextIndex:                 true,
+		fullTextIndexDir:              "index",
+		fullTextIndexFile:             "crec.bleve",
 		indexRefreshIntervalInMinutes: 5,
 		clientCacheMaxAgeInSeconds:    120,
 		providerRegistryDir:           "provider-registry",
@@ -31,8 +32,9 @@ func TestUnmarshalTOML(t *testing.T) {
 		"ServerContentPath":             "_serverContentPath",
 		"ServerImportPath":              "_serverImportPath",
 		"ImportQueueDir":                "_importQueueDir",
-		"IndexDir":                      "_indexDir",
-		"IndexFile":                     "_indexFile",
+		"FullTextIndex":                 true,
+		"FullTextIndexDir":              "_indexDir",
+		"FullTextIndexFile":             "_indexFile",
 		"IndexRefreshIntervalInMinutes": int64(1),
 		"ClientCacheMaxAgeInSeconds":    int64(2),
 		"ProviderRegistryDir":           "_providerRegistryDir",
@@ -43,8 +45,9 @@ func TestUnmarshalTOML(t *testing.T) {
 		serverContentPath:             "_serverContentPath",
 		serverImportPath:              "_serverImportPath",
 		importQueueDir:                "_importQueueDir",
-		indexDir:                      "_indexDir",
-		indexFile:                     "_indexFile",
+		fullTextIndex:                 true,
+		fullTextIndexDir:              "_indexDir",
+		fullTextIndexFile:             "_indexFile",
 		indexRefreshIntervalInMinutes: int64(1),
 		clientCacheMaxAgeInSeconds:    int64(2),
 		providerRegistryDir:           "_providerRegistryDir",
@@ -65,8 +68,9 @@ func TestGetterMethods(t *testing.T) {
 		serverContentPath:             "/crec/content",
 		serverImportPath:              "/crec/import",
 		importQueueDir:                "import",
-		indexDir:                      "index",
-		indexFile:                     "crec.bleve",
+		fullTextIndex:                 true,
+		fullTextIndexDir:              "index",
+		fullTextIndexFile:             "crec.bleve",
 		indexRefreshIntervalInMinutes: 5,
 		clientCacheMaxAgeInSeconds:    120,
 		providerRegistryDir:           "provider-registry",
@@ -77,8 +81,9 @@ func TestGetterMethods(t *testing.T) {
 	assertEquals(t, config.serverContentPath, config.GetContentPath())
 	assertEquals(t, config.serverImportPath, config.GetImportPath())
 	assertEquals(t, config.importQueueDir, config.GetImportQueueDir())
-	assertEquals(t, config.indexDir, config.GetIndexDir())
-	assertEquals(t, config.indexFile, config.GetIndexFile())
+	assertEquals(t, config.fullTextIndex, config.FullTextIndexActive())
+	assertEquals(t, config.fullTextIndexDir, config.GetFullTextIndexDir())
+	assertEquals(t, config.fullTextIndexFile, config.GetFullTextIndexFile())
 	assertEquals(t, config.indexRefreshIntervalInMinutes, int64(config.GetIndexRefreshInterval().Minutes()))
 	assertEquals(t, strconv.Itoa(int(config.clientCacheMaxAgeInSeconds)), config.GetClientCacheMaxAge())
 	assertEquals(t, config.providerRegistryDir, config.GetProviderRegistryDir())
@@ -88,31 +93,36 @@ func TestGetterMethods(t *testing.T) {
 
 func TestCreateMethods(t *testing.T) {
 	c := CreateWithIndexDir("indexDir")
-	if c.indexDir != "indexDir" {
+	if c.fullTextIndexDir != "indexDir" {
 		t.Error("Failed to create config with index dir")
 	}
 
 	c = CreateWithProviderDir("providerDir")
 	if c.providerRegistryDir != "providerDir" {
-		t.Error("Filed to create config with provider dir")
+		t.Error("Failed to create config with provider dir")
 	}
 
 	c = CreateWithSecret("secret")
 	if c.secret != "secret" {
-		t.Error("Filed to create config with secret")
+		t.Error("Failed to create config with secret")
 	}
 
-	c = Create("secret", "templateDir", "importQueueDir")
+	c = Create("secret", "templateDir", "importQueueDir", "indexDir", "indexFile")
 	if c.secret != "secret" {
-		t.Error("Filed to create config with secret")
+		t.Error("Failed to create config with secret")
 	}
 	if c.templateDir != "templateDir" {
-		t.Error("Filed to create config with template dir")
+		t.Error("Failed to create config with template dir")
 	}
 	if c.importQueueDir != "importQueueDir" {
-		t.Error("Filed to create config with import queue dir")
+		t.Error("Failed to create config with import queue dir")
 	}
-
+	if c.fullTextIndexDir != "indexDir" {
+		t.Error("Failed to create config with index dir")
+	}
+	if c.fullTextIndexFile != "indexFile" {
+		t.Error("Failed to create config with index file")
+	}
 }
 
 func assertEquals(t *testing.T, want interface{}, got interface{}) {

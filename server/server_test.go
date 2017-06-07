@@ -21,8 +21,14 @@ var index *ingester.Index
 var server *Server
 
 func TestMain(m *testing.M) {
-	index = ingester.CreateIndex(filepath.FromSlash(os.TempDir()+"/crec-test-index"), "test.bleve")
-	config := config.Create("test-secret01234", "../template", filepath.FromSlash(os.TempDir()+"/import"))
+	config := config.Create(
+		"test-secret01234",
+		"../template",
+		filepath.FromSlash(os.TempDir()+"/import"),
+		filepath.FromSlash(os.TempDir()+"/crec-test-index"),
+		"test.bleve")
+
+	index = ingester.CreateIndex(config)
 	server = Create(config, provider.Providers{"test": &provider.Provider{ID: "test"}}, index)
 	os.Exit(m.Run())
 }

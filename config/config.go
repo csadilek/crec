@@ -20,8 +20,9 @@ type Config struct {
 	serverContentPath             string
 	serverImportPath              string
 	importQueueDir                string
-	indexDir                      string
-	indexFile                     string
+	fullTextIndex                 bool
+	fullTextIndexDir              string
+	fullTextIndexFile             string
 	indexRefreshIntervalInMinutes int64
 	providerRegistryDir           string
 	clientCacheMaxAgeInSeconds    int64
@@ -38,8 +39,9 @@ func (c *Config) UnmarshalTOML(data interface{}) error {
 	c.maybeUpdateConfig(d, "ServerContentPath", func(val interface{}) { c.serverContentPath = val.(string) })
 	c.maybeUpdateConfig(d, "ServerImportPath", func(val interface{}) { c.serverImportPath = val.(string) })
 	c.maybeUpdateConfig(d, "ImportQueueDir", func(val interface{}) { c.importQueueDir = val.(string) })
-	c.maybeUpdateConfig(d, "IndexDir", func(val interface{}) { c.indexDir = val.(string) })
-	c.maybeUpdateConfig(d, "IndexFile", func(val interface{}) { c.indexFile = val.(string) })
+	c.maybeUpdateConfig(d, "FullTextIndex", func(val interface{}) { c.fullTextIndex = val.(bool) })
+	c.maybeUpdateConfig(d, "FullTextIndexDir", func(val interface{}) { c.fullTextIndexDir = val.(string) })
+	c.maybeUpdateConfig(d, "FullTextIndexFile", func(val interface{}) { c.fullTextIndexFile = val.(string) })
 	c.maybeUpdateConfig(d, "IndexRefreshIntervalInMinutes", func(val interface{}) { c.indexRefreshIntervalInMinutes = val.(int64) })
 	c.maybeUpdateConfig(d, "ProviderRegistryDir", func(val interface{}) { c.providerRegistryDir = val.(string) })
 	c.maybeUpdateConfig(d, "ClientCacheMaxAgeInSeconds", func(val interface{}) { c.clientCacheMaxAgeInSeconds = val.(int64) })
@@ -61,8 +63,9 @@ func Get() *Config {
 		serverContentPath:             "/crec/content",
 		serverImportPath:              "/crec/import",
 		importQueueDir:                "import",
-		indexDir:                      "index",
-		indexFile:                     "crec.bleve",
+		fullTextIndex:                 true,
+		fullTextIndexDir:              "index",
+		fullTextIndexFile:             "crec.bleve",
 		indexRefreshIntervalInMinutes: 5,
 		clientCacheMaxAgeInSeconds:    120,
 		providerRegistryDir:           "provider-registry",
@@ -106,14 +109,19 @@ func (c *Config) GetImportQueueDir() string {
 	return c.importQueueDir
 }
 
-// GetIndexDir returns the directory path to store indexes e.g. index
-func (c *Config) GetIndexDir() string {
-	return c.indexDir
+// FullTextIndexActive returns true if a full-text index should be created, otherwise false.
+func (c *Config) FullTextIndexActive() bool {
+	return c.fullTextIndex
 }
 
-// GetIndexFile returns the path to store the index e.g. crec.bleve
-func (c *Config) GetIndexFile() string {
-	return c.indexFile
+// GetFullTextIndexDir returns the directory path to store indexes e.g. index
+func (c *Config) GetFullTextIndexDir() string {
+	return c.fullTextIndexDir
+}
+
+// GetFullTextIndexFile returns the path to store the index e.g. crec.bleve
+func (c *Config) GetFullTextIndexFile() string {
+	return c.fullTextIndexFile
 }
 
 // GetProviderRegistryDir returns the directy path containing provider configurations e.g. provider-registry
@@ -142,11 +150,15 @@ func (c *Config) GetTemplateDir() string {
 }
 
 // Create returns a config instance with the provided parameters
-func Create(secret string, templateDir string, importQueueDir string) *Config {
+func Create(secret string, templateDir string, importQueueDir string,
+	fullTextIndexDir string, fullTextIndexFile string) *Config {
+
 	config := Get()
 	config.secret = secret
 	config.templateDir = templateDir
 	config.importQueueDir = importQueueDir
+	config.fullTextIndexDir = fullTextIndexDir
+	config.fullTextIndexFile = fullTextIndexFile
 	return config
 }
 
@@ -160,7 +172,7 @@ func CreateWithSecret(secret string) *Config {
 // CreateWithIndexDir returns a config instance with the provided index dir
 func CreateWithIndexDir(indexDir string) *Config {
 	config := Get()
-	config.indexDir = indexDir
+	config.fullTextIndexDir = indexDir
 	return config
 }
 

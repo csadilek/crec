@@ -10,6 +10,7 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/nu7hatch/gouuid"
 	"golang.org/x/text/language"
+	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
 )
 
@@ -17,7 +18,7 @@ import (
 type Index struct {
 	id                   string
 	allContent           []*content.Content
-	contentMap           map[string]*content.Content
+	content              map[string]*content.Content
 	providers            map[string][]*content.Content
 	providersLastUpdated map[string]time.Time
 	languages            map[string][]*content.Content
@@ -27,31 +28,35 @@ type Index struct {
 }
 
 // CreateIndex creates an index instance, using the provided file name and root directory
-func CreateIndex(indexRoot string, indexFile string) *Index {
+func CreateIndex(c *config.Config) *Index {
 	u, err := uuid.NewV4()
 	if err != nil {
 		log.Fatal("Failed to create index directory:", err)
 	}
-	indexPath := filepath.FromSlash(indexRoot + "/" + u.String() + "/" + indexFile)
-	bleveIndex, err := bleve.Open(indexPath)
-	if err != nil {
-		mapping := bleve.NewIndexMapping()
-		bleveIndex, err = bleve.New(indexPath, mapping)
+
+	var fullTextIndex bleve.Index
+	if c.FullTextIndexActive() {
+		indexPath := filepath.FromSlash(c.GetFullTextIndexDir() + "/" + u.String() + "/" + c.GetFullTextIndexFile())
+		fullTextIndex, err = bleve.Open(indexPath)
 		if err != nil {
-			log.Fatal("Failed to create index: ", err)
+			mapping := bleve.NewIndexMapping()
+			fullTextIndex, err = bleve.New(indexPath, mapping)
+			if err != nil {
+				log.Fatal("Failed to create index: ", err)
+			}
 		}
 	}
 
 	return &Index{
 		id:                   u.String(),
 		allContent:           make([]*content.Content, 0),
-		contentMap:           make(map[string]*content.Content),
+		content:              make(map[string]*content.Content),
 		providers:            make(map[string][]*content.Content),
 		providersLastUpdated: make(map[string]time.Time),
 		languages:            make(map[string][]*content.Content),
 		regions:              make(map[string][]*content.Content),
 		scripts:              make(map[string][]*content.Content),
-		fullText:             bleveIndex}
+		fullText:             fullTextIndex}
 }
 
 // AddAll adds the provided content items to this index
@@ -68,7 +73,7 @@ func (i *Index) AddAll(c []*content.Content) error {
 // Add content to index
 func (i *Index) Add(c *content.Content) error {
 	i.allContent = append(i.allContent, c)
-	i.contentMap[c.ID] = c
+	i.content[c.ID] = c
 	i.providers[c.Source] = append(i.providers[c.Source], c)
 
 	if len(c.Regions) == 0 {
@@ -81,20 +86,26 @@ func (i *Index) Add(c *content.Content) error {
 	indexLocaleValue(c.Language, c, i.languages)
 	indexLocaleValue(c.Script, c, i.scripts)
 
-	return i.fullText.Index(c.ID, c.Title+" "+c.Summary)
+	if i.fullText != nil {
+		return i.fullText.Index(c.ID, c.Title+" "+c.Summary)
+	}
+
+	return nil
 }
 
 // Query index for content
 func (i *Index) Query(q string) ([]*content.Content, error) {
 	c := make([]*content.Content, 0)
+	if i.fullText == nil {
+		return c, nil
+	}
 
 	query := bleve.NewQueryStringQuery(q)
 	searchRequest := bleve.NewSearchRequest(query)
 	searchResult, err := i.fullText.Search(searchRequest)
-
 	if searchResult != nil {
 		for _, hit := range searchResult.Hits {
-			hitc := i.contentMap[hit.ID]
+			hitc := i.content[hit.ID]
 			if hitc != nil {
 				c = append(c, hitc)
 			}

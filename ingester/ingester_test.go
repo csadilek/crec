@@ -33,7 +33,7 @@ func TestIngesterReusesExistingContentIfNotExpired(t *testing.T) {
 func testIngesterReusesExistingContent(t *testing.T, p *provider.Provider) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	providers := provider.Providers{"test": p}
-	curIndex := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
+	curIndex := CreateIndex(config)
 
 	curIndex.Add(&content.Content{ID: "0", Source: "test"})
 	curIndex.SetProviderLastUpdated("test")
@@ -85,7 +85,7 @@ func TestIngestNative(t *testing.T) {
 
 	p := &provider.Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
+	index := CreateIndex(config)
 
 	err := ingestNative(p, &http.Client{}, index)
 	if err != nil {
@@ -112,7 +112,7 @@ func TestIngestSyndicationFeed(t *testing.T) {
 
 	p := &provider.Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
+	index := CreateIndex(config)
 
 	err := ingestSyndicationFeed(p, &http.Client{}, index)
 	if err != nil {

@@ -29,7 +29,7 @@ import (
 func Ingest(config *config.Config, providers provider.Providers, curIndex *Index) *Index {
 	CleanUp(config, curIndex)
 
-	index := CreateIndex(config.GetIndexDir(), config.GetIndexFile())
+	index := CreateIndex(config)
 
 	var wg sync.WaitGroup
 	wg.Add(len(providers))
@@ -85,10 +85,10 @@ func Queue(config *config.Config, content []byte, provider string) error {
 
 // CleanUp deletes all but the current active index
 func CleanUp(config *config.Config, curIndex *Index) {
-	indexDirs, _ := ioutil.ReadDir(config.GetIndexDir())
+	indexDirs, _ := ioutil.ReadDir(config.GetFullTextIndexDir())
 	for _, indexDir := range indexDirs {
 		if indexDir.Name() != curIndex.GetID() {
-			err := os.RemoveAll(filepath.FromSlash(config.GetIndexDir() + "/" + indexDir.Name()))
+			err := os.RemoveAll(filepath.FromSlash(config.GetFullTextIndexDir() + "/" + indexDir.Name()))
 			if err != nil {
 				log.Println("Failed to clean up old indexes: ", err)
 			}
