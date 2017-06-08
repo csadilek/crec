@@ -13,17 +13,10 @@ import (
 
 	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
-	"mozilla.org/crec/ingester"
 	"mozilla.org/crec/provider"
 )
 
-type FailingRecommender struct{}
-
-func (r *FailingRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
-	return nil, errors.New("Expected error for testing purposes")
-}
-
-var index *ingester.Index
+var index *content.Index
 var server *Server
 
 func TestMain(m *testing.M) {
@@ -34,7 +27,7 @@ func TestMain(m *testing.M) {
 		filepath.FromSlash(os.TempDir()+"/crec-test-index"),
 		"test.bleve")
 
-	index = ingester.CreateIndex(config)
+	index = content.CreateIndex(config)
 	server = Create(config, provider.Providers{"test": &provider.Provider{ID: "test"}}, index)
 	os.Exit(m.Run())
 }
@@ -183,6 +176,16 @@ func TestHandleImportChecksAPIKey(t *testing.T) {
 		t.Errorf("Expected 200 (Status OK), but got %v", recorder.Code)
 	}
 }
+
+type FailingRecommender struct{}
+
+func (r *FailingRecommender) Recommend(
+	index *content.Index,
+	params map[string]interface{}) (content.Recommendations, error) {
+
+	return nil, errors.New("Expected error for testing purposes")
+}
+
 func TestCacheHeadersOmittedIfRecommenderFailing(t *testing.T) {
 	failingRecommender := &FailingRecommender{}
 	server.recommenders = append(server.recommenders, failingRecommender)

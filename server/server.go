@@ -22,30 +22,28 @@ import (
 
 	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
-	"mozilla.org/crec/ingester"
 	"mozilla.org/crec/provider"
-	"mozilla.org/crec/recommender"
 )
 
 // Server to host public API for content consumption
 type Server struct {
-	index        unsafe.Pointer            // Index providing access to content
-	recommenders []recommender.Recommender // Array of configured content recommenders
-	config       *config.Config            // Reference to system config
-	providers    provider.Providers        // All configured content providers
+	index        unsafe.Pointer        // Index providing access to content
+	recommenders []content.Recommender // Array of configured content recommenders
+	config       *config.Config        // Reference to system config
+	providers    provider.Providers    // All configured content providers
 }
 
 // Create a new server instance
-func Create(config *config.Config, providers provider.Providers, index *ingester.Index) *Server {
-	s := Server{}
-	s.config = config
-	s.providers = providers
-	s.recommenders = []recommender.Recommender{
-		&recommender.TagBasedRecommender{},
-		&recommender.QueryBasedRecommender{},
-		&recommender.ProviderBasedRecommender{}}
+func Create(config *config.Config, providers provider.Providers, index *content.Index) *Server {
+	recommenders := []content.Recommender{
+		&content.TagBasedRecommender{},
+		&content.QueryBasedRecommender{},
+		&content.ProviderBasedRecommender{}}
 
-	s.SetIndex(index)
+	s := Server{index: unsafe.Pointer(index),
+		recommenders: recommenders,
+		config:       config,
+		providers:    providers}
 
 	http.HandleFunc(config.GetImportPath(), s.handleImport)
 	http.HandleFunc(config.GetContentPath(), s.handleContent)
@@ -80,7 +78,7 @@ func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ingester.Queue(s.config, body, provider)
+	err = content.Enqueue(s.config, body, provider)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Failed to enqueue content for indexing.\n"))
@@ -90,9 +88,10 @@ func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
-	if match := r.Header.Get("If-None-Match"); match != "" {
-		if match == s.getIndex().GetID() {
+func (s *Server) handleContent(w http.ResponseWriter, req *http.Request) {
+	index := s.getIndex()
+	if match := req.Header.Get("If-None-Match"); match != "" {
+		if match == index.GetID() {
 			w.WriteHeader(http.StatusNotModified)
 			return
 		}
@@ -100,14 +99,14 @@ func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	c, hadErrors := s.produceRecommendations(r)
+	c, hadErrors := s.produceRecommendations(req, index)
 	if !hadErrors {
-		w.Header().Set("Etag", s.getIndex().GetID())
+		w.Header().Set("Etag", index.GetID())
 		w.Header().Set("Cache-Control", "max-age="+s.config.GetClientCacheMaxAge()+", must-revalidate")
 	}
 
-	format := r.URL.Query().Get("f")
-	acceptHeader := r.Header.Get("Accept")
+	format := req.URL.Query().Get("f")
+	acceptHeader := req.Header.Get("Accept")
 	if strings.Contains(acceptHeader, "html") && !strings.EqualFold(format, "json") {
 		s.respondWithHTML(w, c)
 	} else if strings.Contains(acceptHeader, "json") ||
@@ -120,20 +119,18 @@ func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) produceRecommendations(r *http.Request) ([]*content.Content, bool) {
-	tags, _, _ := language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
-
+func (s *Server) produceRecommendations(r *http.Request, index *content.Index) (content.Recommendations, bool) {
 	params := make(map[string]interface{})
-	params["lang-tags"] = tags
+	params["lang-tags"], _, _ = language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
 	params["tags"] = r.URL.Query().Get("t")
 	params["query"] = r.URL.Query().Get("q")
 	params["provider"] = r.URL.Query().Get("p")
 
-	c := make([]*content.Content, 0)
+	recs := make(content.Recommendations, 0)
 	cDedupe := make(map[string]bool)
 	hadErrors := false
 	for _, rec := range s.recommenders {
-		crec, err := rec.Recommend(s.getIndex(), params)
+		crec, err := rec.Recommend(index, params)
 		if err != nil {
 			log.Printf("%v failed: %v\n", reflect.TypeOf(rec).Elem().Name(), err)
 			hadErrors = true
@@ -142,28 +139,28 @@ func (s *Server) produceRecommendations(r *http.Request) ([]*content.Content, bo
 		for _, rec := range crec {
 			if _, ok := cDedupe[rec.ID]; !ok {
 				cDedupe[rec.ID] = true
-				c = append(c, rec)
+				recs = append(recs, rec)
 			}
 		}
 
 	}
-	return c, hadErrors
+	return recs, hadErrors
 }
 
-func (s *Server) respondWithHTML(w http.ResponseWriter, c []*content.Content) {
+func (s *Server) respondWithHTML(w http.ResponseWriter, recs content.Recommendations) {
 	t, err := template.ParseFiles(filepath.FromSlash(s.config.GetTemplateDir() + "/item.html"))
 	if err != nil {
 		log.Fatal("Failed to parse template: ", err)
 	}
 
 	w.Header().Set("Content-Type", "text/html;charset=UTF-8")
-	for _, r := range c {
+	for _, r := range recs {
 		t.Execute(w, &r)
 	}
 }
 
-func (s *Server) respondWithJSON(w http.ResponseWriter, c []*content.Content) {
-	bytes, err := json.Marshal(c)
+func (s *Server) respondWithJSON(w http.ResponseWriter, recs content.Recommendations) {
+	bytes, err := json.Marshal(recs)
 	if err != nil {
 		log.Fatal("Failed to marshal content to JSON: ", err)
 	}
@@ -172,10 +169,10 @@ func (s *Server) respondWithJSON(w http.ResponseWriter, c []*content.Content) {
 }
 
 //SetIndex atomically updates the server's index to reflect updated content
-func (s *Server) SetIndex(index *ingester.Index) {
+func (s *Server) SetIndex(index *content.Index) {
 	atomic.StorePointer(&s.index, unsafe.Pointer(index))
 }
 
-func (s *Server) getIndex() *ingester.Index {
-	return (*ingester.Index)(atomic.LoadPointer(&s.index))
+func (s *Server) getIndex() *content.Index {
+	return (*content.Index)(atomic.LoadPointer(&s.index))
 }

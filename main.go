@@ -7,7 +7,7 @@ import (
 	"flag"
 
 	"mozilla.org/crec/config"
-	"mozilla.org/crec/ingester"
+	"mozilla.org/crec/content"
 	"mozilla.org/crec/provider"
 	"mozilla.org/crec/server"
 )
@@ -26,12 +26,12 @@ func main() {
 		server.PrintAPIKeys(providers, config)
 	}
 
-	index := ingester.Ingest(config, providers, &ingester.Index{})
+	index := content.Ingest(config, providers, &content.Index{})
 	server := server.Create(config, providers, index)
 	ticker := time.NewTicker(config.GetIndexRefreshInterval())
 	go func() {
 		for _ = range ticker.C {
-			index := ingester.Ingest(config, providers, index)
+			index := content.Ingest(config, providers, index)
 			server.SetIndex(index)
 		}
 	}()

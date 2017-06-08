@@ -1,4 +1,4 @@
-package ingester
+package content
 
 import (
 	"io/ioutil"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/jaytaylor/html2text"
 	"github.com/mmcdole/gofeed"
-	"mozilla.org/crec/content"
 	"mozilla.org/crec/provider"
 
 	"log"
@@ -68,8 +67,8 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 	return index
 }
 
-// Queue content to be ingested in the next iteration
-func Queue(config *config.Config, content []byte, provider string) error {
+// Enqueue writes content to the disc to be ingested in the next indexing iteration
+func Enqueue(config *config.Config, content []byte, provider string) error {
 	path := filepath.Join(config.GetImportQueueDir(), provider)
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
@@ -142,7 +141,7 @@ func ingestNative(provider *provider.Provider, client *http.Client, index *Index
 }
 
 func ingestJSON(bytes []byte, provider *provider.Provider, index *Index) error {
-	var content []content.Content
+	var content []Content
 	err := json.Unmarshal(bytes, &content)
 	if err != nil {
 		return err
@@ -177,7 +176,7 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 	return nil
 }
 
-func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (*content.Content, error) {
+func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (*Content, error) {
 	r := strings.NewReader(item.Description)
 	doc, err := html.Parse(r)
 	if err != nil {
@@ -197,7 +196,7 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		return nil, err
 	}
 
-	newc := &content.Content{
+	newc := &Content{
 		ID:        findID(item),
 		Source:    provider.ID,
 		Title:     item.Title,

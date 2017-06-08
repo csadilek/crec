@@ -1,4 +1,4 @@
-package ingester
+package content
 
 import (
 	"os"
@@ -8,7 +8,6 @@ import (
 	"golang.org/x/text/language"
 
 	"mozilla.org/crec/config"
-	"mozilla.org/crec/content"
 )
 
 func TestMain(m *testing.M) {
@@ -35,7 +34,7 @@ func TestGetID(t *testing.T) {
 func TestGetContent(t *testing.T) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config)
-	err := index.Add(&content.Content{ID: "0", Summary: "a summary"})
+	err := index.Add(&Content{ID: "0", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +47,7 @@ func TestGetContent(t *testing.T) {
 func TestAddAndQueryContent(t *testing.T) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config)
-	err := index.Add(&content.Content{ID: "0", Summary: "a summary"})
+	err := index.Add(&Content{ID: "0", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +63,7 @@ func TestAddAndQueryContent(t *testing.T) {
 func TestAddAndQueryTitle(t *testing.T) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config)
-	err := index.Add(&content.Content{ID: "0", Title: "a title", Summary: "a summary"})
+	err := index.Add(&Content{ID: "0", Title: "a title", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,9 +79,9 @@ func TestAddAndQueryTitle(t *testing.T) {
 func TestAddAll(t *testing.T) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config)
-	err := index.AddAll([]*content.Content{
-		&content.Content{ID: "0", Summary: "a summary"},
-		&content.Content{ID: "1", Summary: "a summary"}})
+	err := index.AddAll([]*Content{
+		&Content{ID: "0", Summary: "a summary"},
+		&Content{ID: "1", Summary: "a summary"}})
 
 	if err != nil {
 		t.Fatal(err)
@@ -99,11 +98,11 @@ func TestAddAll(t *testing.T) {
 func TestGetLocalizedContent(t *testing.T) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config)
-	err := index.Add(&content.Content{ID: "0", Title: "Any", Summary: "a summary"})
+	err := index.Add(&Content{ID: "0", Title: "Any", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = index.Add(&content.Content{
+	err = index.Add(&Content{
 		ID:       "1",
 		Title:    "de-at",
 		Summary:  "eine kurzfassung",

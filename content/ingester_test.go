@@ -1,4 +1,4 @@
-package ingester
+package content
 
 import (
 	"fmt"
@@ -12,7 +12,6 @@ import (
 	"net/http/httptest"
 
 	"mozilla.org/crec/config"
-	"mozilla.org/crec/content"
 	"mozilla.org/crec/provider"
 )
 
@@ -35,7 +34,7 @@ func testIngesterReusesExistingContent(t *testing.T, p *provider.Provider) {
 	providers := provider.Providers{"test": p}
 	curIndex := CreateIndex(config)
 
-	curIndex.Add(&content.Content{ID: "0", Source: "test"})
+	curIndex.Add(&Content{ID: "0", Source: "test"})
 	curIndex.SetProviderLastUpdated("test")
 
 	newIndex := Ingest(config, providers, curIndex)
@@ -58,7 +57,7 @@ func TestIngestFromQueue(t *testing.T) {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	providers := provider.Providers{"test": &provider.Provider{ID: "test", Domains: map[string]float32{"d": 0.9}}}
 
-	err := Queue(config, []byte(`[{"id":"0"}]`), "test")
+	err := Enqueue(config, []byte(`[{"id":"0"}]`), "test")
 	if err != nil {
 		t.Errorf("Failed to enqueue content for ingestion: %v", err)
 	}

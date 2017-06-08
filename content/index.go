@@ -1,4 +1,4 @@
-package ingester
+package content
 
 import (
 	"log"
@@ -11,19 +11,18 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"golang.org/x/text/language"
 	"mozilla.org/crec/config"
-	"mozilla.org/crec/content"
 )
 
 // Index responsible for indexing content
 type Index struct {
 	id                   string
-	allContent           []*content.Content
-	content              map[string]*content.Content
-	providers            map[string][]*content.Content
+	allContent           []*Content
+	content              map[string]*Content
+	providers            map[string][]*Content
 	providersLastUpdated map[string]time.Time
-	languages            map[string][]*content.Content
-	regions              map[string][]*content.Content
-	scripts              map[string][]*content.Content
+	languages            map[string][]*Content
+	regions              map[string][]*Content
+	scripts              map[string][]*Content
 	fullText             bleve.Index
 }
 
@@ -49,32 +48,32 @@ func CreateIndex(c *config.Config) *Index {
 
 	return &Index{
 		id:                   u.String(),
-		allContent:           make([]*content.Content, 0),
-		content:              make(map[string]*content.Content),
-		providers:            make(map[string][]*content.Content),
+		allContent:           make([]*Content, 0),
+		content:              make(map[string]*Content),
+		providers:            make(map[string][]*Content),
 		providersLastUpdated: make(map[string]time.Time),
-		languages:            make(map[string][]*content.Content),
-		regions:              make(map[string][]*content.Content),
-		scripts:              make(map[string][]*content.Content),
+		languages:            make(map[string][]*Content),
+		regions:              make(map[string][]*Content),
+		scripts:              make(map[string][]*Content),
 		fullText:             fullTextIndex}
 }
 
-// CreateWithID creates and empty index with the provided ID
-func CreateWithID(id string) *Index {
+// createIndexWithID creates and empty index with the provided ID
+func createIndexWithID(id string) *Index {
 	return &Index{
 		id:                   id,
-		allContent:           make([]*content.Content, 0),
-		content:              make(map[string]*content.Content),
-		providers:            make(map[string][]*content.Content),
+		allContent:           make([]*Content, 0),
+		content:              make(map[string]*Content),
+		providers:            make(map[string][]*Content),
 		providersLastUpdated: make(map[string]time.Time),
-		languages:            make(map[string][]*content.Content),
-		regions:              make(map[string][]*content.Content),
-		scripts:              make(map[string][]*content.Content),
+		languages:            make(map[string][]*Content),
+		regions:              make(map[string][]*Content),
+		scripts:              make(map[string][]*Content),
 		fullText:             nil}
 }
 
 // AddAll adds the provided content items to this index
-func (i *Index) AddAll(c []*content.Content) error {
+func (i *Index) AddAll(c []*Content) error {
 	for _, content := range c {
 		err := i.Add(content)
 		if err != nil {
@@ -85,7 +84,7 @@ func (i *Index) AddAll(c []*content.Content) error {
 }
 
 // Add content to index
-func (i *Index) Add(c *content.Content) error {
+func (i *Index) Add(c *Content) error {
 	i.allContent = append(i.allContent, c)
 	i.content[c.ID] = c
 	i.providers[c.Source] = append(i.providers[c.Source], c)
@@ -108,8 +107,8 @@ func (i *Index) Add(c *content.Content) error {
 }
 
 // Query index for content
-func (i *Index) Query(q string) ([]*content.Content, error) {
-	c := make([]*content.Content, 0)
+func (i *Index) Query(q string) ([]*Content, error) {
+	c := make([]*Content, 0)
 	if i.fullText == nil {
 		return c, nil
 	}
@@ -134,17 +133,17 @@ func (i *Index) GetID() string {
 }
 
 // GetContent returns all indexed content
-func (i *Index) GetContent() []*content.Content {
+func (i *Index) GetContent() []*Content {
 	return i.allContent
 }
 
 // GetLocalizedContent returns indexed content matching the provided language, script and regions
-func (i *Index) GetLocalizedContent(tags []language.Tag) []*content.Content {
+func (i *Index) GetLocalizedContent(tags []language.Tag) []*Content {
 	if len(tags) == 0 {
 		return i.allContent
 	}
 
-	c := make([]*content.Content, 0)
+	c := make([]*Content, 0)
 
 	langHits := i.languages["any"]
 	regionHits := i.regions["any"]
@@ -158,7 +157,7 @@ func (i *Index) GetLocalizedContent(tags []language.Tag) []*content.Content {
 		scriptHits = append(scriptHits, i.scripts[strings.ToLower(s.String())]...)
 	}
 
-	hitMap := make(map[*content.Content]int)
+	hitMap := make(map[*Content]int)
 	for _, langHit := range langHits {
 		hitMap[langHit]++
 	}
@@ -186,11 +185,11 @@ func (i *Index) SetProviderLastUpdated(provider string) {
 }
 
 // GetProviderContent returns all indexed content from the given provider
-func (i *Index) GetProviderContent(provider string) []*content.Content {
+func (i *Index) GetProviderContent(provider string) []*Content {
 	return i.providers[provider]
 }
 
-func indexLocaleValue(key string, val *content.Content, m map[string][]*content.Content) {
+func indexLocaleValue(key string, val *Content, m map[string][]*Content) {
 	k := strings.ToLower(key)
 	if k == "" {
 		m["any"] = append(m["any"], val)

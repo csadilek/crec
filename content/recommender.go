@@ -1,28 +1,28 @@
-package recommender
+package content
 
 import (
 	"strings"
 
 	"golang.org/x/text/language"
-
-	"mozilla.org/crec/content"
-	"mozilla.org/crec/ingester"
 )
 
-// Recommender is an extension point for content recommenders. It calculates
-// content recommendations given a reference to the index and a
+// Recommendations computed by recommenders
+type Recommendations []*Content
+
+// Recommender is an extension point for content recommenders. It computes
+// content recommendations given a reference to the system's index and a
 // map of parameters provided by the client.
 type Recommender interface {
-	Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error)
+	Recommend(index *Index, params map[string]interface{}) (Recommendations, error)
 }
 
 // TagBasedRecommender recommends content based on tags (matching categories)
 type TagBasedRecommender struct{}
 
 // Recommend content based on the provided tags (matching categories)
-func (r *TagBasedRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
+func (r *TagBasedRecommender) Recommend(index *Index, params map[string]interface{}) (Recommendations, error) {
 	allContent := index.GetLocalizedContent(params["lang-tags"].([]language.Tag))
-	var c []*content.Content
+	var c []*Content
 	tags := params["tags"].(string)
 	if tags != "" {
 		var tagSplits []string
@@ -40,13 +40,13 @@ func (r *TagBasedRecommender) Recommend(index *ingester.Index, params map[string
 		}
 
 		if disjunction {
-			c = content.Filter(allContent, content.AnyTagFilter(tagMap))
+			c = Filter(allContent, AnyTagFilter(tagMap))
 		} else {
-			c = content.Filter(allContent, content.AllTagFilter(tagMap))
+			c = Filter(allContent, AllTagFilter(tagMap))
 		}
 	}
 
-	c = content.Transform(c, func(item content.Content) *content.Content {
+	c = Transform(c, func(item Content) *Content {
 		item.Explanation = "Selected for users interested in " + tags
 		return &item
 	})
@@ -58,13 +58,13 @@ type QueryBasedRecommender struct {
 }
 
 // Recommend content matching the provided full-text query
-func (r *QueryBasedRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
+func (r *QueryBasedRecommender) Recommend(index *Index, params map[string]interface{}) (Recommendations, error) {
 	query := params["query"].(string)
 	if query != "" {
 		return index.Query(query)
 	}
 
-	return []*content.Content{}, nil
+	return []*Content{}, nil
 }
 
 // ProviderBasedRecommender recommends content based on a full-text query
@@ -72,11 +72,11 @@ type ProviderBasedRecommender struct {
 }
 
 // Recommend content from the given provider
-func (r *ProviderBasedRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
+func (r *ProviderBasedRecommender) Recommend(index *Index, params map[string]interface{}) (Recommendations, error) {
 	provider := params["provider"].(string)
 	if provider != "" {
 		return index.GetProviderContent(provider), nil
 	}
 
-	return []*content.Content{}, nil
+	return []*Content{}, nil
 }

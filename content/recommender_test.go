@@ -1,17 +1,14 @@
-package recommender
+package content
 
 import (
 	"testing"
 
 	"golang.org/x/text/language"
-
-	"mozilla.org/crec/content"
-	"mozilla.org/crec/ingester"
 )
 
 func TestTagBasedRecommender(t *testing.T) {
-	index := ingester.CreateWithID("test")
-	index.AddAll([]*content.Content{{ID: "0", Tags: []string{"t1", "t2"}}, {ID: "1", Tags: []string{"t3"}}})
+	index := createIndexWithID("test")
+	index.AddAll([]*Content{{ID: "0", Tags: []string{"t1", "t2"}}, {ID: "1", Tags: []string{"t3"}}})
 
 	recommender := TagBasedRecommender{}
 
@@ -63,8 +60,8 @@ func TestTagBasedRecommender(t *testing.T) {
 }
 
 func TestProviderBasedRecommender(t *testing.T) {
-	index := ingester.CreateWithID("test")
-	index.AddAll([]*content.Content{{ID: "1", Source: "p1"}, {ID: "2", Source: "p2"}})
+	index := createIndexWithID("test")
+	index.AddAll([]*Content{{ID: "1", Source: "p1"}, {ID: "2", Source: "p2"}})
 	recommender := &ProviderBasedRecommender{}
 
 	content, err := recommender.Recommend(index, map[string]interface{}{"provider": "p1"})
@@ -80,7 +77,7 @@ func TestProviderBasedRecommender(t *testing.T) {
 }
 
 func TestQueryBasedRecommender(t *testing.T) {
-	index := ingester.CreateWithID("test")
+	index := createIndexWithID("test")
 	recommender := &QueryBasedRecommender{}
 	_, err := recommender.Recommend(index, map[string]interface{}{"query": "keyword"})
 	if err != nil {
