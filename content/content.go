@@ -60,8 +60,8 @@ func (c *Content) String() string {
 	return fmt.Sprintf("Source: %s: Title: %s", c.Source, c.Title)
 }
 
-// filter content using the provided predicate function
-func filter(c []*Content, f func(*Content) bool) []*Content {
+// Filter content using the provided predicate function
+func Filter(c []*Content, f func(*Content) bool) []*Content {
 	vsf := make([]*Content, 0)
 	for _, v := range c {
 		if f(v) {
@@ -71,9 +71,9 @@ func filter(c []*Content, f func(*Content) bool) []*Content {
 	return vsf
 }
 
-// anyTagFilter returns a filter function which retains the content if any
+// AnyTagFilter returns a filter function which retains the content if any
 // of the provided tags is present
-func anyTagFilter(tags map[string]bool) func(*Content) bool {
+func AnyTagFilter(tags map[string]bool) func(*Content) bool {
 	return func(c *Content) bool {
 		for _, t := range c.Tags {
 			if _, ok := tags[strings.ToLower(t)]; ok {
@@ -84,9 +84,9 @@ func anyTagFilter(tags map[string]bool) func(*Content) bool {
 	}
 }
 
-// allTagFilter returns a filter functions which retains the content if all
+// AllTagFilter returns a filter functions which retains the content if all
 // of the provided tags are present
-func allTagFilter(tags map[string]bool) func(*Content) bool {
+func AllTagFilter(tags map[string]bool) func(*Content) bool {
 	return func(c *Content) bool {
 		tagMap := make(map[string]bool)
 		for _, tag := range c.Tags {
@@ -101,8 +101,8 @@ func allTagFilter(tags map[string]bool) func(*Content) bool {
 	}
 }
 
-// transform applies the provided function to a copy of every element in the provided array
-func transform(c []*Content, f func(Content) *Content) []*Content {
+// Transform applies the provided function to a copy of every element in the provided array
+func Transform(c []*Content, f func(Content) *Content) []*Content {
 	vsf := make([]*Content, 0)
 	for _, v := range c {
 		vsf = append(vsf, f(*v))

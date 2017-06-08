@@ -5,7 +5,7 @@ import "testing"
 func TestFilterContent(t *testing.T) {
 	content := []*Content{{ID: "0"}, {ID: "1"}, {ID: "2"}}
 
-	content = filter(content, func(c *Content) bool {
+	content = Filter(content, func(c *Content) bool {
 		return c.ID == "1"
 	})
 	if len(content) != 1 {
@@ -19,12 +19,12 @@ func TestFilterContent(t *testing.T) {
 func TestAnyTagFilter(t *testing.T) {
 	content := []*Content{{Tags: []string{"t1", "t2", "t3"}}}
 
-	filtered := filter(content, anyTagFilter(map[string]bool{"t4": true}))
+	filtered := Filter(content, AnyTagFilter(map[string]bool{"t4": true}))
 	if len(filtered) > 0 {
 		t.Error("Should not have found match")
 	}
 
-	filtered = filter(content, anyTagFilter(map[string]bool{"t2": true}))
+	filtered = Filter(content, AnyTagFilter(map[string]bool{"t2": true}))
 	if len(filtered) != 1 {
 		t.Errorf("Should have found exactly one match, but found %v", len(filtered))
 	}
@@ -33,12 +33,12 @@ func TestAnyTagFilter(t *testing.T) {
 func TestAllTagFilter(t *testing.T) {
 	content := []*Content{{Tags: []string{"t1", "t2", "t3"}}}
 
-	filtered := filter(content, allTagFilter(map[string]bool{"t2": true, "t4": true}))
+	filtered := Filter(content, AllTagFilter(map[string]bool{"t2": true, "t4": true}))
 	if len(filtered) > 0 {
 		t.Error("Should not have found match")
 	}
 
-	filtered = filter(content, allTagFilter(map[string]bool{"t1": true, "t2": true, "t3": true}))
+	filtered = Filter(content, AllTagFilter(map[string]bool{"t1": true, "t2": true, "t3": true}))
 	if len(filtered) != 1 {
 		t.Errorf("Should have found exactly one match, but found %v", len(filtered))
 	}
@@ -47,7 +47,7 @@ func TestAllTagFilter(t *testing.T) {
 func TestTransformContent(t *testing.T) {
 	content := []*Content{{ID: "0"}, {ID: "1"}, {ID: "2"}}
 
-	content = transform(content, func(c Content) *Content {
+	content = Transform(content, func(c Content) *Content {
 		c.Title = "Transformed"
 		return &c
 	})
@@ -64,7 +64,7 @@ func TestTransformContent(t *testing.T) {
 func TestTransformContentIsThreadSafe(t *testing.T) {
 	content := []*Content{{ID: "0"}, {ID: "1"}, {ID: "2"}}
 
-	transform(content, func(c Content) *Content {
+	Transform(content, func(c Content) *Content {
 		c.ID = "Transformed"
 		return &c
 	})

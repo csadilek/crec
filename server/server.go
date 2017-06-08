@@ -24,23 +24,28 @@ import (
 	"mozilla.org/crec/content"
 	"mozilla.org/crec/ingester"
 	"mozilla.org/crec/provider"
+	"mozilla.org/crec/recommender"
 )
 
 // Server to host public API for content consumption
 type Server struct {
-	index        unsafe.Pointer        // Index providing access to content
-	recommenders []content.Recommender // Array of configured content recommenders
-	config       *config.Config        // Reference to system config
-	providers    provider.Providers    // All configured content providers
+	index        unsafe.Pointer            // Index providing access to content
+	recommenders []recommender.Recommender // Array of configured content recommenders
+	config       *config.Config            // Reference to system config
+	providers    provider.Providers        // All configured content providers
 }
 
 // Create a new server instance
 func Create(config *config.Config, providers provider.Providers, index *ingester.Index) *Server {
 	s := Server{}
 	s.config = config
-	s.SetIndex(index)
 	s.providers = providers
-	s.configureRecommenders()
+	s.recommenders = []recommender.Recommender{
+		&recommender.TagBasedRecommender{},
+		&recommender.QueryBasedRecommender{},
+		&recommender.ProviderBasedRecommender{}}
+
+	s.SetIndex(index)
 
 	http.HandleFunc(config.GetImportPath(), s.handleImport)
 	http.HandleFunc(config.GetContentPath(), s.handleContent)
@@ -118,7 +123,8 @@ func (s *Server) handleContent(w http.ResponseWriter, r *http.Request) {
 func (s *Server) produceRecommendations(r *http.Request) ([]*content.Content, bool) {
 	tags, _, _ := language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
 
-	params := make(map[string]string)
+	params := make(map[string]interface{})
+	params["lang-tags"] = tags
 	params["tags"] = r.URL.Query().Get("t")
 	params["query"] = r.URL.Query().Get("q")
 	params["provider"] = r.URL.Query().Get("p")
@@ -127,7 +133,7 @@ func (s *Server) produceRecommendations(r *http.Request) ([]*content.Content, bo
 	cDedupe := make(map[string]bool)
 	hadErrors := false
 	for _, rec := range s.recommenders {
-		crec, err := rec.Recommend(s.getIndex().GetLocalizedContent(tags), params)
+		crec, err := rec.Recommend(s.getIndex(), params)
 		if err != nil {
 			log.Printf("%v failed: %v\n", reflect.TypeOf(rec).Elem().Name(), err)
 			hadErrors = true
@@ -172,23 +178,4 @@ func (s *Server) SetIndex(index *ingester.Index) {
 
 func (s *Server) getIndex() *ingester.Index {
 	return (*ingester.Index)(atomic.LoadPointer(&s.index))
-}
-
-func (s *Server) configureRecommenders() {
-	tagBasedRecommender := &content.TagBasedRecommender{}
-
-	queryBasedRecommender := &content.QueryBasedRecommender{
-		Search: func(q string) ([]*content.Content, error) {
-			return s.getIndex().Query(q)
-		}}
-
-	providerBasedRecommender := &content.ProviderBasedRecommender{
-		Search: func(provider string) []*content.Content {
-			return s.getIndex().GetProviderContent(provider)
-		}}
-
-	s.recommenders = []content.Recommender{
-		tagBasedRecommender,
-		queryBasedRecommender,
-		providerBasedRecommender}
 }

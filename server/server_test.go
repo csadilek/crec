@@ -17,6 +17,12 @@ import (
 	"mozilla.org/crec/provider"
 )
 
+type FailingRecommender struct{}
+
+func (r *FailingRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
+	return nil, errors.New("Expected error for testing purposes")
+}
+
 var index *ingester.Index
 var server *Server
 
@@ -178,9 +184,7 @@ func TestHandleImportChecksAPIKey(t *testing.T) {
 	}
 }
 func TestCacheHeadersOmittedIfRecommenderFailing(t *testing.T) {
-	failingRecommender := &content.QueryBasedRecommender{Search: func(q string) ([]*content.Content, error) {
-		return nil, errors.New("Expected error for testing purposes")
-	}}
+	failingRecommender := &FailingRecommender{}
 	server.recommenders = append(server.recommenders, failingRecommender)
 
 	recorder := httptest.NewRecorder()

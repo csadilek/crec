@@ -1,23 +1,29 @@
-package content
+package recommender
 
 import (
 	"strings"
+
+	"golang.org/x/text/language"
+
+	"mozilla.org/crec/content"
+	"mozilla.org/crec/ingester"
 )
 
 // Recommender is an extension point for content recommenders. It calculates
-// content recommendations given a reference to all available content and a
+// content recommendations given a reference to the index and a
 // map of parameters provided by the client.
 type Recommender interface {
-	Recommend(allContent []*Content, params map[string]string) ([]*Content, error)
+	Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error)
 }
 
 // TagBasedRecommender recommends content based on tags (matching categories)
 type TagBasedRecommender struct{}
 
 // Recommend content based on the provided tags (matching categories)
-func (r *TagBasedRecommender) Recommend(allContent []*Content, params map[string]string) ([]*Content, error) {
-	var c []*Content
-	tags := params["tags"]
+func (r *TagBasedRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
+	allContent := index.GetLocalizedContent(params["lang-tags"].([]language.Tag))
+	var c []*content.Content
+	tags := params["tags"].(string)
 	if tags != "" {
 		var tagSplits []string
 		var disjunction = true
@@ -34,13 +40,13 @@ func (r *TagBasedRecommender) Recommend(allContent []*Content, params map[string
 		}
 
 		if disjunction {
-			c = filter(allContent, anyTagFilter(tagMap))
+			c = content.Filter(allContent, content.AnyTagFilter(tagMap))
 		} else {
-			c = filter(allContent, allTagFilter(tagMap))
+			c = content.Filter(allContent, content.AllTagFilter(tagMap))
 		}
 	}
 
-	c = transform(c, func(item Content) *Content {
+	c = content.Transform(c, func(item content.Content) *content.Content {
 		item.Explanation = "Selected for users interested in " + tags
 		return &item
 	})
@@ -49,30 +55,28 @@ func (r *TagBasedRecommender) Recommend(allContent []*Content, params map[string
 
 // QueryBasedRecommender recommends content based on a full-text query
 type QueryBasedRecommender struct {
-	Search func(query string) ([]*Content, error)
 }
 
 // Recommend content matching the provided full-text query
-func (r *QueryBasedRecommender) Recommend(all []*Content, params map[string]string) ([]*Content, error) {
-	query := params["query"]
+func (r *QueryBasedRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
+	query := params["query"].(string)
 	if query != "" {
-		return r.Search(query)
+		return index.Query(query)
 	}
 
-	return []*Content{}, nil
+	return []*content.Content{}, nil
 }
 
 // ProviderBasedRecommender recommends content based on a full-text query
 type ProviderBasedRecommender struct {
-	Search func(provider string) []*Content
 }
 
 // Recommend content from the given provider
-func (r *ProviderBasedRecommender) Recommend(all []*Content, params map[string]string) ([]*Content, error) {
-	provider := params["provider"]
+func (r *ProviderBasedRecommender) Recommend(index *ingester.Index, params map[string]interface{}) ([]*content.Content, error) {
+	provider := params["provider"].(string)
 	if provider != "" {
-		return r.Search(provider), nil
+		return index.GetProviderContent(provider), nil
 	}
 
-	return []*Content{}, nil
+	return []*content.Content{}, nil
 }

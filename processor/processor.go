@@ -40,7 +40,7 @@ type Context struct {
 	Result  map[string]string
 }
 
-// NewHTMLContext create a new HTML specific processing context
+// NewHTMLContext creates a new HTML specific processing context
 func NewHTMLContext(content interface{}) *Context {
 	return &Context{Content: content, HTML: true, Result: make(map[string]string)}
 }

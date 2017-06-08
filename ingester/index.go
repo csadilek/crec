@@ -59,6 +59,20 @@ func CreateIndex(c *config.Config) *Index {
 		fullText:             fullTextIndex}
 }
 
+// CreateWithID creates and empty index with the provided ID
+func CreateWithID(id string) *Index {
+	return &Index{
+		id:                   id,
+		allContent:           make([]*content.Content, 0),
+		content:              make(map[string]*content.Content),
+		providers:            make(map[string][]*content.Content),
+		providersLastUpdated: make(map[string]time.Time),
+		languages:            make(map[string][]*content.Content),
+		regions:              make(map[string][]*content.Content),
+		scripts:              make(map[string][]*content.Content),
+		fullText:             nil}
+}
+
 // AddAll adds the provided content items to this index
 func (i *Index) AddAll(c []*content.Content) error {
 	for _, content := range c {

@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 
 func tearDown() {
 	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	CleanUp(config, &Index{})
+	cleanUp(config, &Index{})
 	os.RemoveAll(config.GetImportQueueDir())
 }
 

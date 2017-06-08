@@ -27,7 +27,7 @@ import (
 
 // Ingest content from configured providers
 func Ingest(config *config.Config, providers provider.Providers, curIndex *Index) *Index {
-	CleanUp(config, curIndex)
+	cleanUp(config, curIndex)
 
 	index := CreateIndex(config)
 
@@ -83,8 +83,8 @@ func Queue(config *config.Config, content []byte, provider string) error {
 	return err
 }
 
-// CleanUp deletes all but the current active index
-func CleanUp(config *config.Config, curIndex *Index) {
+// cleanUp deletes all but the current active index
+func cleanUp(config *config.Config, curIndex *Index) {
 	indexDirs, _ := ioutil.ReadDir(config.GetFullTextIndexDir())
 	for _, indexDir := range indexDirs {
 		if indexDir.Name() != curIndex.GetID() {
