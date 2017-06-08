@@ -169,16 +169,16 @@ func (i *Index) GetLocalizedContent(tags []language.Tag) []*Content {
 		scriptHits = append(scriptHits, i.scripts[strings.ToLower(s.String())]...)
 	}
 
-	hitMap := make(map[*Content]int)
+	langHitMap := make(map[*Content]bool)
+	regionHitMap := make(map[*Content]bool)
 	for _, langHit := range langHits {
-		hitMap[langHit]++
+		langHitMap[langHit] = true
 	}
 	for _, regionHit := range regionHits {
-		hitMap[regionHit]++
+		regionHitMap[regionHit] = true
 	}
 	for _, scriptHit := range scriptHits {
-		hitMap[scriptHit]++
-		if hitMap[scriptHit] == 3 {
+		if langHitMap[scriptHit] && regionHitMap[scriptHit] {
 			c = append(c, scriptHit)
 		}
 	}

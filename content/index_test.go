@@ -112,7 +112,7 @@ func TestGetLocalizedContent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hits := index.GetLocalizedContent([]language.Tag{language.Make("en-CA")})
+	hits := index.GetLocalizedContent([]language.Tag{language.Make("en-CA"), language.Make("en")})
 	// Should not get de-AT content, but content with ID:0 as it has lang|region|script=any by default
 	if len(hits) != 1 {
 		t.Fatalf("Expected exactly one hit, but got %v %v", len(hits), hits)
