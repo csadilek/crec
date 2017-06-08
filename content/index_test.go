@@ -118,7 +118,7 @@ func TestGetLocalizedContent(t *testing.T) {
 		t.Fatalf("Expected exactly one hit, but got %v %v", len(hits), hits)
 	}
 	if hits[0].ID != "0" {
-		t.Error("Received invalid content for provide locale")
+		t.Error("Received invalid content for provided locale")
 	}
 
 	hits = index.GetLocalizedContent([]language.Tag{language.Make("de")})
@@ -127,12 +127,32 @@ func TestGetLocalizedContent(t *testing.T) {
 		t.Fatalf("Expected exactly one hit, but got %v %v", len(hits), hits)
 	}
 	if hits[0].ID != "0" {
-		t.Error("Received invalid content for provide locale")
+		t.Error("Received invalid content for provided locale")
 	}
 
 	hits = index.GetLocalizedContent([]language.Tag{language.Make("de-AT")})
 	// Should get both content flagged as "any" and de-AT
 	if len(hits) != 2 {
 		t.Errorf("Expected exactly two hits, but got %v %v", len(hits), hits)
+	}
+}
+
+func TestGetTaggedContent(t *testing.T) {
+	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	index := CreateIndex(config)
+	err := index.AddAll([]*Content{
+		&Content{ID: "0", Tags: []string{"t1"}, Summary: "a summary"},
+		&Content{ID: "1", Tags: []string{"t2"}, Summary: "a summary"}})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	hits := index.GetTaggedContent("t1")
+
+	if len(hits) != 1 {
+		t.Errorf("Expected exactly one hit, but got %v", len(hits))
+	}
+	if hits[0].ID != "0" {
+		t.Error("Received invalid content for provided tag")
 	}
 }

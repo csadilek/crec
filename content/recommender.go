@@ -36,12 +36,19 @@ func (r *TagBasedRecommender) Recommend(index *Index, params map[string]interfac
 
 		tagMap := make(map[string]bool)
 		for _, s := range tagSplits {
-			tagMap[strings.TrimSpace(strings.ToLower(s))] = true
+			tag := strings.TrimSpace(strings.ToLower(s))
+			tagMap[tag] = true
 		}
 
 		if disjunction {
+			//for t := range tagMap {
+			//	c = append(c, index.GetTaggedContent(t)...)
+			//}
+			// Index lookup above is faster than filtering content,
+			// but doesn't consider accept-lang
 			c = Filter(allContent, AnyTagFilter(tagMap))
 		} else {
+			// TODO could use GetTaggedCotnent and build up a hit map
 			c = Filter(allContent, AllTagFilter(tagMap))
 		}
 	}

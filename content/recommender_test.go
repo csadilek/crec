@@ -39,7 +39,7 @@ func TestTagBasedRecommender(t *testing.T) {
 		t.Error("Should not have found a recommendation")
 	}
 
-	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1,t2", "lang-tags": []language.Tag{}})
+	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1,tX", "lang-tags": []language.Tag{}})
 	if err != nil {
 		t.Fatal(err)
 	}

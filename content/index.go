@@ -23,6 +23,7 @@ type Index struct {
 	languages            map[string][]*Content
 	regions              map[string][]*Content
 	scripts              map[string][]*Content
+	tags                 map[string][]*Content
 	fullText             bleve.Index
 }
 
@@ -55,6 +56,7 @@ func CreateIndex(c *config.Config) *Index {
 		languages:            make(map[string][]*Content),
 		regions:              make(map[string][]*Content),
 		scripts:              make(map[string][]*Content),
+		tags:                 make(map[string][]*Content),
 		fullText:             fullTextIndex}
 }
 
@@ -69,6 +71,7 @@ func createIndexWithID(id string) *Index {
 		languages:            make(map[string][]*Content),
 		regions:              make(map[string][]*Content),
 		scripts:              make(map[string][]*Content),
+		tags:                 make(map[string][]*Content),
 		fullText:             nil}
 }
 
@@ -87,8 +90,17 @@ func (i *Index) AddAll(c []*Content) error {
 func (i *Index) Add(c *Content) error {
 	i.allContent = append(i.allContent, c)
 	i.content[c.ID] = c
+
+	// Index provider
 	i.providers[c.Source] = append(i.providers[c.Source], c)
 
+	// Index tags
+	for _, tag := range c.Tags {
+		lTag := strings.ToLower(tag)
+		i.tags[lTag] = append(i.tags[lTag], c)
+	}
+
+	// Indeax lang/region/script
 	if len(c.Regions) == 0 {
 		i.regions["any"] = append(i.regions["any"], c)
 	} else {
@@ -187,6 +199,11 @@ func (i *Index) SetProviderLastUpdated(provider string) {
 // GetProviderContent returns all indexed content from the given provider
 func (i *Index) GetProviderContent(provider string) []*Content {
 	return i.providers[provider]
+}
+
+// GetTaggedContent returns content containing the provided tag
+func (i *Index) GetTaggedContent(tag string) []*Content {
+	return i.tags[tag]
 }
 
 func indexLocaleValue(key string, val *Content, m map[string][]*Content) {
