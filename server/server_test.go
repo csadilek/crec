@@ -93,9 +93,9 @@ func TestHandleContentProcessesAcceptHeaders(t *testing.T) {
 	}
 }
 func TestHandleContentProducesRecommendations(t *testing.T) {
-	index.Add(&content.Content{ID: "0", Tags: []string{"t1"}})
-	index.Add(&content.Content{ID: "1", Summary: "q1"})
-	index.Add(&content.Content{ID: "2", Source: "p1"})
+	index.AddItem(&content.Content{ID: "0", Tags: []string{"t1"}})
+	index.AddItem(&content.Content{ID: "1", Summary: "q1"})
+	index.AddItem(&content.Content{ID: "2", Source: "p1"})
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetContentPath()+"?t=t1&q=q1&p=p1", nil)
@@ -123,9 +123,9 @@ func TestHandleContentProducesRecommendations(t *testing.T) {
 	}
 }
 func TestHandleContentProducesUniqueRecommendations(t *testing.T) {
-	index.Add(&content.Content{ID: "0", Tags: []string{"t1"}, Summary: "q1"})
-	index.Add(&content.Content{ID: "1", Summary: "q1"})
-	index.Add(&content.Content{ID: "2", Source: "p1", Summary: "q1"})
+	index.AddItem(&content.Content{ID: "0", Tags: []string{"t1"}, Summary: "q1"})
+	index.AddItem(&content.Content{ID: "1", Summary: "q1"})
+	index.AddItem(&content.Content{ID: "2", Source: "p1", Summary: "q1"})
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetContentPath()+"?t=t1&q=q1&p=p1", nil)

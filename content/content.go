@@ -26,7 +26,7 @@ type Content struct {
 	Summary string `json:"summary,omitempty"`
 
 	// HTML view of the content
-	HTML string `json:"html,omitempty"`
+	HTML string `json:"-"`
 
 	// Explanation as to why the content was recommended to a specific client
 	Explanation string `json:"explanation,omitempty"`
@@ -53,7 +53,7 @@ type Content struct {
 	// name is used as key, the weight as value. This can be used
 	// to map content to specific user interests i.e. based on
 	// their browsing history.
-	Domains map[string]float32
+	Domains map[string]float32 `json:"domains,omitempty"`
 }
 
 func (c *Content) String() string {

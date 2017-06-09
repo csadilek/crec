@@ -49,14 +49,14 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 					}
 				} else {
 					log.Println("Reusing content from provider " + provider.ID)
-					index.AddAll(curIndex.GetProviderContent(provider.ID))
+					index.Add(curIndex.GetProviderContent(provider.ID))
 				}
 			} else {
 				err = ingestFromQueue(config, provider, index)
 			}
 
 			if err != nil {
-				index.AddAll(curIndex.GetProviderContent(provider.ID))
+				index.Add(curIndex.GetProviderContent(provider.ID))
 				log.Printf("Failed to refresh content from provider %v: %v", provider.ID, err)
 			}
 		}(p)
@@ -141,7 +141,7 @@ func ingestNative(provider *provider.Provider, client *http.Client, index *Index
 }
 
 func ingestJSON(bytes []byte, provider *provider.Provider, index *Index) error {
-	var content []Content
+	var content []*Content
 	err := json.Unmarshal(bytes, &content)
 	if err != nil {
 		return err
@@ -151,8 +151,9 @@ func ingestJSON(bytes []byte, provider *provider.Provider, index *Index) error {
 		if len(item.Domains) == 0 {
 			item.Domains = provider.Domains
 		}
-		index.Add(&item)
 	}
+
+	index.Add(content)
 
 	return nil
 }
@@ -165,13 +166,15 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 		return err
 	}
 
+	content := make([]*Content, 0)
 	for _, item := range feed.Items {
 		newc, err := createContentFromFeedItem(provider, item)
 		if err != nil {
 			return err
 		}
-		index.Add(newc)
+		content = append(content, newc)
 	}
+	index.Add(content)
 
 	return nil
 }

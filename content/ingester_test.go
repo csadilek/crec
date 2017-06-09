@@ -34,7 +34,7 @@ func testIngesterReusesExistingContent(t *testing.T, p *provider.Provider) {
 	providers := provider.Providers{"test": p}
 	curIndex := CreateIndex(config)
 
-	curIndex.Add(&Content{ID: "0", Source: "test"})
+	curIndex.AddItem(&Content{ID: "0", Source: "test"})
 	curIndex.SetProviderLastUpdated("test")
 
 	newIndex := Ingest(config, providers, curIndex)

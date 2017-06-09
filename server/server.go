@@ -96,7 +96,6 @@ func (s *Server) handleContent(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	c, hadErrors := s.produceRecommendations(req, index)

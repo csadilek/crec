@@ -8,7 +8,7 @@ import (
 
 func TestTagBasedRecommender(t *testing.T) {
 	index := createIndexWithID("test")
-	index.AddAll([]*Content{{ID: "0", Tags: []string{"t1", "t2"}}, {ID: "1", Tags: []string{"t3"}}})
+	index.Add([]*Content{{ID: "0", Tags: []string{"t1", "t2"}}, {ID: "1", Tags: []string{"t3"}}})
 
 	recommender := TagBasedRecommender{}
 
@@ -61,7 +61,7 @@ func TestTagBasedRecommender(t *testing.T) {
 
 func TestProviderBasedRecommender(t *testing.T) {
 	index := createIndexWithID("test")
-	index.AddAll([]*Content{{ID: "1", Source: "p1"}, {ID: "2", Source: "p2"}})
+	index.Add([]*Content{{ID: "1", Source: "p1"}, {ID: "2", Source: "p2"}})
 	recommender := &ProviderBasedRecommender{}
 
 	content, err := recommender.Recommend(index, map[string]interface{}{"provider": "p1"})

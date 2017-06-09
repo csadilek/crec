@@ -3,6 +3,7 @@ package content
 import (
 	"log"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"strings"
@@ -25,6 +26,7 @@ type Index struct {
 	scripts              map[string][]*Content
 	tags                 map[string][]*Content
 	fullText             bleve.Index
+	mux                  sync.Mutex
 }
 
 // CreateIndex creates an index instance, using the provided file name and root directory
@@ -75,10 +77,13 @@ func createIndexWithID(id string) *Index {
 		fullText:             nil}
 }
 
-// AddAll adds the provided content items to this index
-func (i *Index) AddAll(c []*Content) error {
+// Add adds the provided content items to this index
+func (i *Index) Add(c []*Content) error {
+	i.mux.Lock()
+	defer i.mux.Unlock()
+
 	for _, content := range c {
-		err := i.Add(content)
+		err := i.AddItem(content)
 		if err != nil {
 			return err
 		}
@@ -86,8 +91,8 @@ func (i *Index) AddAll(c []*Content) error {
 	return nil
 }
 
-// Add content to index
-func (i *Index) Add(c *Content) error {
+// AddItem adds a content item to this index. This method is not thread-safe.
+func (i *Index) AddItem(c *Content) error {
 	i.allContent = append(i.allContent, c)
 	i.content[c.ID] = c
 
