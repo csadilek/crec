@@ -27,6 +27,7 @@ type Config struct {
 	providerRegistryDir           string
 	clientCacheMaxAgeInSeconds    int64
 	templateDir                   string
+	locales                       string
 }
 
 // UnmarshalTOML provides a custom "unmarshaller" so we can keep our fields
@@ -46,6 +47,7 @@ func (c *Config) UnmarshalTOML(data interface{}) error {
 	c.maybeUpdateConfig(d, "ProviderRegistryDir", func(val interface{}) { c.providerRegistryDir = val.(string) })
 	c.maybeUpdateConfig(d, "ClientCacheMaxAgeInSeconds", func(val interface{}) { c.clientCacheMaxAgeInSeconds = val.(int64) })
 	c.maybeUpdateConfig(d, "TemplateDir", func(val interface{}) { c.templateDir = val.(string) })
+	c.maybeUpdateConfig(d, "Locales", func(val interface{}) { c.locales = val.(string) })
 	return nil
 }
 
@@ -69,7 +71,8 @@ func Get() *Config {
 		indexRefreshIntervalInMinutes: 5,
 		clientCacheMaxAgeInSeconds:    120,
 		providerRegistryDir:           "provider-registry",
-		templateDir:                   "template"}
+		templateDir:                   "template",
+		locales:                       "en, en-US"}
 
 	port := os.Getenv("PORT")
 	if port != "" {
@@ -147,6 +150,11 @@ func (c *Config) GetClientCacheMaxAge() string {
 // GetTemplateDir returns the configured html template directory
 func (c *Config) GetTemplateDir() string {
 	return c.templateDir
+}
+
+// GetLocales returns the configured default locales of this node
+func (c *Config) GetLocales() string {
+	return c.locales
 }
 
 // Create returns a config instance with the provided parameters

@@ -35,3 +35,6 @@ ClientCacheMaxAgeInSeconds=120
 
 # Directory to store the content provider configurations
 ProviderRegistryDir="provider-registry"
+
+# Default locales of this node, used to speed up indexing
+Locales="en, en-US"

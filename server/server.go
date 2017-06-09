@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"golang.org/x/text/language"
-
 	"encoding/json"
 	"log"
 
@@ -120,7 +118,7 @@ func (s *Server) handleContent(w http.ResponseWriter, req *http.Request) {
 
 func (s *Server) produceRecommendations(r *http.Request, index *content.Index) (content.Recommendations, bool) {
 	params := make(map[string]interface{})
-	params["lang-tags"], _, _ = language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
+	params["lang"] = r.Header.Get("Accept-Language")
 	params["tags"] = r.URL.Query().Get("t")
 	params["query"] = r.URL.Query().Get("q")
 	params["provider"] = r.URL.Query().Get("p")

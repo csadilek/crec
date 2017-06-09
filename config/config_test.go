@@ -17,7 +17,8 @@ func TestGetConfigReturnsMeaningfulDefaults(t *testing.T) {
 		indexRefreshIntervalInMinutes: 5,
 		clientCacheMaxAgeInSeconds:    120,
 		providerRegistryDir:           "provider-registry",
-		templateDir:                   "template"}
+		templateDir:                   "template",
+		locales:                       "en, en-US"}
 
 	got := Get()
 
@@ -38,7 +39,8 @@ func TestUnmarshalTOML(t *testing.T) {
 		"IndexRefreshIntervalInMinutes": int64(1),
 		"ClientCacheMaxAgeInSeconds":    int64(2),
 		"ProviderRegistryDir":           "_providerRegistryDir",
-		"TemplateDir":                   "template"}
+		"TemplateDir":                   "template",
+		"Locales":                       "en, en-US"}
 
 	want := Config{
 		serverAddr:                    "_serverAddr",
@@ -51,7 +53,8 @@ func TestUnmarshalTOML(t *testing.T) {
 		indexRefreshIntervalInMinutes: int64(1),
 		clientCacheMaxAgeInSeconds:    int64(2),
 		providerRegistryDir:           "_providerRegistryDir",
-		templateDir:                   "template"}
+		templateDir:                   "template",
+		locales:                       "en, en-US"}
 
 	got := &Config{}
 	got.UnmarshalTOML(toml)
@@ -75,7 +78,8 @@ func TestGetterMethods(t *testing.T) {
 		clientCacheMaxAgeInSeconds:    120,
 		providerRegistryDir:           "provider-registry",
 		templateDir:                   "template",
-		secret:                        "dont-do-this"}
+		secret:                        "dont-do-this",
+		locales:                       "en, en-US"}
 
 	assertEquals(t, config.serverAddr, config.GetAddr())
 	assertEquals(t, config.serverContentPath, config.GetContentPath())
@@ -89,6 +93,7 @@ func TestGetterMethods(t *testing.T) {
 	assertEquals(t, config.providerRegistryDir, config.GetProviderRegistryDir())
 	assertEquals(t, config.templateDir, config.GetTemplateDir())
 	assertEquals(t, config.secret, config.GetSecret())
+	assertEquals(t, config.locales, config.GetLocales())
 }
 
 func TestCreateMethods(t *testing.T) {

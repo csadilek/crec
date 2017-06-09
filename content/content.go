@@ -41,13 +41,13 @@ type Content struct {
 	Tags []string `json:"tags,omitempty"`
 
 	// Language the content is written in
-	Language string `json:"language,omitempty"`
+	Language string `json:"-"`
 
 	// Regions the content is applicable to
-	Regions []string `json:"regions,omitempty"`
+	Regions []string `json:"-"`
 
 	// Script the content is written in
-	Script string `json:"script,omitempty"`
+	Script string `json:"-"`
 
 	// Specifies the domain similarities of this content. The domain
 	// name is used as key, the weight as value. This can be used
@@ -86,14 +86,14 @@ func AnyTagFilter(tags map[string]bool) func(*Content) bool {
 
 // AllTagFilter returns a filter functions which retains the content if all
 // of the provided tags are present
-func AllTagFilter(tags map[string]bool) func(*Content) bool {
+func AllTagFilter(tags []string) func(*Content) bool {
 	return func(c *Content) bool {
 		tagMap := make(map[string]bool)
 		for _, tag := range c.Tags {
 			tagMap[strings.TrimSpace(tag)] = true
 		}
-		for k := range tags {
-			if _, ok := tagMap[k]; !ok {
+		for _, t := range tags {
+			if _, ok := tagMap[t]; !ok {
 				return false
 			}
 		}

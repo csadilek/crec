@@ -2,8 +2,6 @@ package content
 
 import (
 	"testing"
-
-	"golang.org/x/text/language"
 )
 
 func TestTagBasedRecommender(t *testing.T) {
@@ -12,7 +10,7 @@ func TestTagBasedRecommender(t *testing.T) {
 
 	recommender := TagBasedRecommender{}
 
-	recs, err := recommender.Recommend(index, map[string]interface{}{"tags": "t1 t3", "lang-tags": []language.Tag{}})
+	recs, err := recommender.Recommend(index, map[string]interface{}{"tags": "t1 t3", "lang": ""})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +18,7 @@ func TestTagBasedRecommender(t *testing.T) {
 		t.Error("Should not have found a recommendation")
 	}
 
-	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1 t2", "lang-tags": []language.Tag{}})
+	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1 t2", "lang": ""})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +29,7 @@ func TestTagBasedRecommender(t *testing.T) {
 		t.Error("Expected different recommendation")
 	}
 
-	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t4", "lang-tags": []language.Tag{}})
+	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t4", "lang": ""})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +37,7 @@ func TestTagBasedRecommender(t *testing.T) {
 		t.Error("Should not have found a recommendation")
 	}
 
-	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1,tX", "lang-tags": []language.Tag{}})
+	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1,tX", "lang": ""})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +48,7 @@ func TestTagBasedRecommender(t *testing.T) {
 		t.Error("Expected different recommendation")
 	}
 
-	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1,t3", "lang-tags": []language.Tag{}})
+	recs, err = recommender.Recommend(index, map[string]interface{}{"tags": "t1,t3", "lang": ""})
 	if err != nil {
 		t.Fatal(err)
 	}

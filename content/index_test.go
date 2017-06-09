@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/text/language"
-
 	"mozilla.org/crec/config"
 )
 
@@ -112,7 +110,7 @@ func TestGetLocalizedContent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	hits := index.GetLocalizedContent([]language.Tag{language.Make("en-CA"), language.Make("en")})
+	hits := index.GetLocalizedContent("en-CA, en")
 	// Should not get de-AT content, but content with ID:0 as it has lang|region|script=any by default
 	if len(hits) != 1 {
 		t.Fatalf("Expected exactly one hit, but got %v %v", len(hits), hits)
@@ -121,7 +119,7 @@ func TestGetLocalizedContent(t *testing.T) {
 		t.Error("Received invalid content for provided locale")
 	}
 
-	hits = index.GetLocalizedContent([]language.Tag{language.Make("de")})
+	hits = index.GetLocalizedContent("de")
 	// Should still not get German content as content is limited to AT region
 	if len(hits) != 1 {
 		t.Fatalf("Expected exactly one hit, but got %v %v", len(hits), hits)
@@ -130,7 +128,7 @@ func TestGetLocalizedContent(t *testing.T) {
 		t.Error("Received invalid content for provided locale")
 	}
 
-	hits = index.GetLocalizedContent([]language.Tag{language.Make("de-AT")})
+	hits = index.GetLocalizedContent("de-AT")
 	// Should get both content flagged as "any" and de-AT
 	if len(hits) != 2 {
 		t.Errorf("Expected exactly two hits, but got %v %v", len(hits), hits)

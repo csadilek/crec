@@ -6,11 +6,12 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/text/language"
+
 	"strings"
 
 	"github.com/blevesearch/bleve"
 	"github.com/nu7hatch/gouuid"
-	"golang.org/x/text/language"
 	"mozilla.org/crec/config"
 )
 
@@ -19,6 +20,7 @@ type Index struct {
 	id                   string
 	allContent           []*Content
 	content              map[string]*Content
+	localizedContent     map[string][]*Content
 	providers            map[string][]*Content
 	providersLastUpdated map[string]time.Time
 	languages            map[string][]*Content
@@ -53,6 +55,7 @@ func CreateIndex(c *config.Config) *Index {
 		id:                   u.String(),
 		allContent:           make([]*Content, 0),
 		content:              make(map[string]*Content),
+		localizedContent:     make(map[string][]*Content),
 		providers:            make(map[string][]*Content),
 		providersLastUpdated: make(map[string]time.Time),
 		languages:            make(map[string][]*Content),
@@ -68,6 +71,7 @@ func createIndexWithID(id string) *Index {
 		id:                   id,
 		allContent:           make([]*Content, 0),
 		content:              make(map[string]*Content),
+		localizedContent:     make(map[string][]*Content),
 		providers:            make(map[string][]*Content),
 		providersLastUpdated: make(map[string]time.Time),
 		languages:            make(map[string][]*Content),
@@ -105,7 +109,7 @@ func (i *Index) AddItem(c *Content) error {
 		i.tags[lTag] = append(i.tags[lTag], c)
 	}
 
-	// Indeax lang/region/script
+	// Index lang/region/script
 	if len(c.Regions) == 0 {
 		i.regions["any"] = append(i.regions["any"], c)
 	} else {
@@ -116,6 +120,7 @@ func (i *Index) AddItem(c *Content) error {
 	indexLocaleValue(c.Language, c, i.languages)
 	indexLocaleValue(c.Script, c, i.scripts)
 
+	// Add to full-text index
 	if i.fullText != nil {
 		return i.fullText.Index(c.ID, c.Title+" "+c.Summary)
 	}
@@ -155,7 +160,12 @@ func (i *Index) GetContent() []*Content {
 }
 
 // GetLocalizedContent returns indexed content matching the provided language, script and regions
-func (i *Index) GetLocalizedContent(tags []language.Tag) []*Content {
+func (i *Index) GetLocalizedContent(acceptLang string) []*Content {
+	if i.localizedContent[acceptLang] != nil {
+		return i.localizedContent[acceptLang]
+	}
+
+	tags, _, _ := language.ParseAcceptLanguage(acceptLang)
 	if len(tags) == 0 {
 		return i.allContent
 	}
@@ -189,6 +199,13 @@ func (i *Index) GetLocalizedContent(tags []language.Tag) []*Content {
 	}
 
 	return c
+}
+
+// PreLoadLocales builds up an index of localized content for the provided lang strings
+func (i *Index) PreLoadLocales(acceptLang string) {
+	for _, lang := range strings.Split(acceptLang, ",") {
+		i.localizedContent[lang] = i.GetLocalizedContent(lang)
+	}
 }
 
 // GetProviderLastUpdated returns the last updated time of the given provider

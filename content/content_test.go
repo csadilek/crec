@@ -33,12 +33,12 @@ func TestAnyTagFilter(t *testing.T) {
 func TestAllTagFilter(t *testing.T) {
 	content := []*Content{{Tags: []string{"t1", "t2", "t3"}}}
 
-	filtered := Filter(content, AllTagFilter(map[string]bool{"t2": true, "t4": true}))
+	filtered := Filter(content, AllTagFilter([]string{"t2", "t4"}))
 	if len(filtered) > 0 {
 		t.Error("Should not have found match")
 	}
 
-	filtered = Filter(content, AllTagFilter(map[string]bool{"t1": true, "t2": true, "t3": true}))
+	filtered = Filter(content, AllTagFilter([]string{"t1", "t2", "t3"}))
 	if len(filtered) != 1 {
 		t.Errorf("Should have found exactly one match, but found %v", len(filtered))
 	}

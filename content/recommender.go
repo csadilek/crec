@@ -2,8 +2,6 @@ package content
 
 import (
 	"strings"
-
-	"golang.org/x/text/language"
 )
 
 // Recommendations computed by recommenders
@@ -21,7 +19,6 @@ type TagBasedRecommender struct{}
 
 // Recommend content based on the provided tags (matching categories)
 func (r *TagBasedRecommender) Recommend(index *Index, params map[string]interface{}) (Recommendations, error) {
-	allContent := index.GetLocalizedContent(params["lang-tags"].([]language.Tag))
 	var c []*Content
 	tags := params["tags"].(string)
 	if tags != "" {
@@ -34,29 +31,24 @@ func (r *TagBasedRecommender) Recommend(index *Index, params map[string]interfac
 			disjunction = false
 		}
 
-		tagMap := make(map[string]bool)
-		for _, s := range tagSplits {
-			tag := strings.TrimSpace(strings.ToLower(s))
-			tagMap[tag] = true
-		}
-
+		localizedContent := index.GetLocalizedContent(params["lang"].(string))
 		if disjunction {
-			//for t := range tagMap {
-			//	c = append(c, index.GetTaggedContent(t)...)
-			//}
-			// Index lookup above is faster than filtering content,
-			// but doesn't consider accept-lang
-			c = Filter(allContent, AnyTagFilter(tagMap))
+			lcMap := make(map[*Content]bool)
+			for _, lc := range localizedContent {
+				lcMap[lc] = true
+			}
+			for _, t := range tagSplits {
+				for _, tc := range index.GetTaggedContent(strings.ToLower(t)) {
+					if lcMap[tc] {
+						c = append(c, tc)
+					}
+				}
+			}
 		} else {
-			// TODO could use GetTaggedCotnent and build up a hit map
-			c = Filter(allContent, AllTagFilter(tagMap))
+			// TODO could use GetTaggedContent and build up a hit map
+			c = Filter(localizedContent, AllTagFilter(tagSplits))
 		}
 	}
-
-	c = Transform(c, func(item Content) *Content {
-		item.Explanation = "Selected for users interested in " + tags
-		return &item
-	})
 	return c, nil
 }
 

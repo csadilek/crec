@@ -62,8 +62,9 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 		}(p)
 	}
 	wg.Wait()
-	log.Println("Indexing complete")
 
+	index.PreLoadLocales(config.GetLocales())
+	log.Println("Indexing complete")
 	return index
 }
 
@@ -151,6 +152,7 @@ func ingestJSON(bytes []byte, provider *provider.Provider, index *Index) error {
 		if len(item.Domains) == 0 {
 			item.Domains = provider.Domains
 		}
+		item = maybeAppendExplanation(item)
 	}
 
 	index.Add(content)
@@ -214,7 +216,7 @@ func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (
 		Language:  provider.Language,
 		Script:    provider.Script,
 		Domains:   provider.Domains}
-	return newc, nil
+	return maybeAppendExplanation(newc), nil
 }
 
 func findImage(item *gofeed.Item, context *processor.Context) string {
@@ -245,4 +247,11 @@ func findID(item *gofeed.Item) string {
 		return item.GUID
 	}
 	return item.Link
+}
+
+func maybeAppendExplanation(content *Content) *Content {
+	if len(content.Tags) > 0 {
+		content.Explanation = "Selected for users interested in " + strings.Join(content.Tags, ",")
+	}
+	return content
 }
