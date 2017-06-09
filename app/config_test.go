@@ -1,4 +1,4 @@
-package config
+package app
 
 import (
 	"strconv"
@@ -20,7 +20,7 @@ func TestGetConfigReturnsMeaningfulDefaults(t *testing.T) {
 		templateDir:                   "template",
 		locales:                       "en, en-US"}
 
-	got := Get()
+	got := GetConfig()
 
 	if want != *got {
 		t.Errorf("Expected %v, but got %v", want, *got)
@@ -97,22 +97,22 @@ func TestGetterMethods(t *testing.T) {
 }
 
 func TestCreateMethods(t *testing.T) {
-	c := CreateWithIndexDir("indexDir")
+	c := CreateConfigWithIndexDir("indexDir")
 	if c.fullTextIndexDir != "indexDir" {
 		t.Error("Failed to create config with index dir")
 	}
 
-	c = CreateWithProviderDir("providerDir")
+	c = CreateConfigWithProviderDir("providerDir")
 	if c.providerRegistryDir != "providerDir" {
 		t.Error("Failed to create config with provider dir")
 	}
 
-	c = CreateWithSecret("secret")
+	c = CreateConfigWithSecret("secret")
 	if c.secret != "secret" {
 		t.Error("Failed to create config with secret")
 	}
 
-	c = Create("secret", "templateDir", "importQueueDir", "indexDir", "indexFile")
+	c = CreateConfig("secret", "templateDir", "importQueueDir", "indexDir", "indexFile")
 	if c.secret != "secret" {
 		t.Error("Failed to create config with secret")
 	}

@@ -11,24 +11,23 @@ import (
 
 	"net/http"
 
-	"mozilla.org/crec/config"
+	"mozilla.org/crec/app"
 	"mozilla.org/crec/content"
-	"mozilla.org/crec/provider"
 )
 
 var index *content.Index
 var server *Server
 
 func TestMain(m *testing.M) {
-	config := config.Create(
+	config := app.CreateConfig(
 		"test-secret01234",
-		"../template",
+		"../../template",
 		filepath.FromSlash(os.TempDir()+"/import"),
 		filepath.FromSlash(os.TempDir()+"/crec-test-index"),
 		"test.bleve")
 
 	index = content.CreateIndex(config)
-	server = Create(config, provider.Providers{"test": &provider.Provider{ID: "test"}}, index)
+	server = Create(config, content.Providers{"test": &content.Provider{ID: "test"}}, index)
 	os.Exit(m.Run())
 }
 func TestHandleContentProcessesCacheHeaders(t *testing.T) {
@@ -155,7 +154,7 @@ func TestHandleContentProducesUniqueRecommendations(t *testing.T) {
 func TestHandleImportChecksAPIKey(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetImportPath(), nil)
-	apikey := GenerateAPIKey("test", server.config)
+	apikey := app.GenerateKey("test", server.config)
 
 	server.handleImport(recorder, request)
 	if recorder.Code != http.StatusForbidden {

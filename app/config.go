@@ -1,4 +1,4 @@
-package config
+package app
 
 import (
 	"io/ioutil"
@@ -57,9 +57,9 @@ func (c *Config) maybeUpdateConfig(data map[string]interface{}, name string, upd
 	}
 }
 
-// Get returns the configuration based on config.toml, if present.
+// GetConfig returns the configuration based on config.toml, if present.
 // Default values are provided for all keys not present, except Secret.
-func Get() *Config {
+func GetConfig() *Config {
 	c := &Config{
 		serverAddr:                    ":8080",
 		serverContentPath:             "/crec/content",
@@ -157,11 +157,11 @@ func (c *Config) GetLocales() string {
 	return c.locales
 }
 
-// Create returns a config instance with the provided parameters
-func Create(secret string, templateDir string, importQueueDir string,
+// CreateConfig returns a config instance with the provided parameters
+func CreateConfig(secret string, templateDir string, importQueueDir string,
 	fullTextIndexDir string, fullTextIndexFile string) *Config {
 
-	config := Get()
+	config := GetConfig()
 	config.secret = secret
 	config.templateDir = templateDir
 	config.importQueueDir = importQueueDir
@@ -170,23 +170,23 @@ func Create(secret string, templateDir string, importQueueDir string,
 	return config
 }
 
-// CreateWithSecret returns a config instance with the provided secret
-func CreateWithSecret(secret string) *Config {
-	config := Get()
+// CreateConfigWithSecret returns a config instance with the provided secret
+func CreateConfigWithSecret(secret string) *Config {
+	config := GetConfig()
 	config.secret = secret
 	return config
 }
 
-// CreateWithIndexDir returns a config instance with the provided index dir
-func CreateWithIndexDir(indexDir string) *Config {
-	config := Get()
+// CreateConfigWithIndexDir returns a config instance with the provided index dir
+func CreateConfigWithIndexDir(indexDir string) *Config {
+	config := GetConfig()
 	config.fullTextIndexDir = indexDir
 	return config
 }
 
-// CreateWithProviderDir returns a config instance with the given provider dir
-func CreateWithProviderDir(providerDir string) *Config {
-	config := Get()
+// CreateConfigWithProviderDir returns a config instance with the given provider dir
+func CreateConfigWithProviderDir(providerDir string) *Config {
+	config := GetConfig()
 	config.providerRegistryDir = providerDir
 	return config
 }

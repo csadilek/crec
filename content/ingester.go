@@ -11,7 +11,7 @@ import (
 
 	"github.com/jaytaylor/html2text"
 	"github.com/mmcdole/gofeed"
-	"mozilla.org/crec/provider"
+	"mozilla.org/crec/app"
 
 	"log"
 
@@ -20,12 +20,11 @@ import (
 
 	"encoding/json"
 
-	"mozilla.org/crec/config"
-	"mozilla.org/crec/processor"
+	"mozilla.org/crec/content/processor"
 )
 
 // Ingest content from configured providers
-func Ingest(config *config.Config, providers provider.Providers, curIndex *Index) *Index {
+func Ingest(config *app.Config, providers Providers, curIndex *Index) *Index {
 	cleanUp(config, curIndex)
 
 	index := CreateIndex(config)
@@ -33,7 +32,7 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 	var wg sync.WaitGroup
 	wg.Add(len(providers))
 	for _, p := range providers {
-		go func(provider *provider.Provider) {
+		go func(provider *Provider) {
 			defer wg.Done()
 			var err error
 
@@ -69,7 +68,7 @@ func Ingest(config *config.Config, providers provider.Providers, curIndex *Index
 }
 
 // Enqueue writes content to the disc to be ingested in the next indexing iteration
-func Enqueue(config *config.Config, content []byte, provider string) error {
+func Enqueue(config *app.Config, content []byte, provider string) error {
 	path := filepath.Join(config.GetImportQueueDir(), provider)
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
@@ -84,7 +83,7 @@ func Enqueue(config *config.Config, content []byte, provider string) error {
 }
 
 // cleanUp deletes all but the current active index
-func cleanUp(config *config.Config, curIndex *Index) {
+func cleanUp(config *app.Config, curIndex *Index) {
 	indexDirs, _ := ioutil.ReadDir(config.GetFullTextIndexDir())
 	for _, indexDir := range indexDirs {
 		if indexDir.Name() != curIndex.GetID() {
@@ -96,7 +95,7 @@ func cleanUp(config *config.Config, curIndex *Index) {
 	}
 }
 
-func ingestFromProvider(provider *provider.Provider, index *Index) error {
+func ingestFromProvider(provider *Provider, index *Index) error {
 	client := &http.Client{Timeout: time.Duration(time.Second * 5)}
 	var err error
 	if provider.Native {
@@ -107,7 +106,7 @@ func ingestFromProvider(provider *provider.Provider, index *Index) error {
 	return err
 }
 
-func ingestFromQueue(config *config.Config, provider *provider.Provider, index *Index) error {
+func ingestFromQueue(config *app.Config, provider *Provider, index *Index) error {
 	path := filepath.Join(config.GetImportQueueDir(), provider.ID)
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info != nil && !info.IsDir() {
@@ -126,7 +125,7 @@ func ingestFromQueue(config *config.Config, provider *provider.Provider, index *
 	return err
 }
 
-func ingestNative(provider *provider.Provider, client *http.Client, index *Index) error {
+func ingestNative(provider *Provider, client *http.Client, index *Index) error {
 	resp, err := client.Get(provider.ContentURL)
 	if err != nil {
 		return err
@@ -141,7 +140,7 @@ func ingestNative(provider *provider.Provider, client *http.Client, index *Index
 	return ingestJSON(body, provider, index)
 }
 
-func ingestJSON(bytes []byte, provider *provider.Provider, index *Index) error {
+func ingestJSON(bytes []byte, provider *Provider, index *Index) error {
 	var content []*Content
 	err := json.Unmarshal(bytes, &content)
 	if err != nil {
@@ -160,7 +159,7 @@ func ingestJSON(bytes []byte, provider *provider.Provider, index *Index) error {
 	return nil
 }
 
-func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, index *Index) error {
+func ingestSyndicationFeed(provider *Provider, client *http.Client, index *Index) error {
 	fp := gofeed.NewParser()
 	fp.Client = client
 	feed, err := fp.ParseURL(provider.ContentURL)
@@ -181,7 +180,7 @@ func ingestSyndicationFeed(provider *provider.Provider, client *http.Client, ind
 	return nil
 }
 
-func createContentFromFeedItem(provider *provider.Provider, item *gofeed.Item) (*Content, error) {
+func createContentFromFeedItem(provider *Provider, item *gofeed.Item) (*Content, error) {
 	r := strings.NewReader(item.Description)
 	doc, err := html.Parse(r)
 	if err != nil {

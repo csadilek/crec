@@ -1,4 +1,4 @@
-package provider
+package content
 
 import (
 	"io/ioutil"
@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-	"mozilla.org/crec/config"
-	"mozilla.org/crec/processor"
+	"mozilla.org/crec/app"
+	"mozilla.org/crec/content/processor"
 )
 
 // Provider represents a content provider.
@@ -68,7 +68,7 @@ type Provider struct {
 type Providers map[string]*Provider
 
 // GetProviders returns all registered content providers
-func GetProviders(config *config.Config) (Providers, error) {
+func GetProviders(config *app.Config) (Providers, error) {
 	return readProvidersFromRegistry(config.GetProviderRegistryDir())
 }
 

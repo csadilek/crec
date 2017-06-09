@@ -12,7 +12,7 @@ ServerAddr=":8080"
 # URL path for fetching content
 ServerContentPath="/crec/content"
 
-# URL path to import content
+# URL path for importing content
 ServerImportPath="/crec/import"
 
 # Directory to store imported content
@@ -27,14 +27,17 @@ FullTextIndexDir="index"
 # File to store full-text index in $FullTextIndexDir
 FullTextIndexFile="crec.bleve"
 
-# Interval in minutes used to refresh content
+# Interval (in minutes) used to refresh content
 IndexRefreshIntervalInMinutes=5
 
 # Max-age used for client-side caching
 ClientCacheMaxAgeInSeconds=120
 
-# Directory to store the content provider configurations
+# Directory to store content provider configurations
 ProviderRegistryDir="provider-registry"
+
+# Directory for HTML templates
+Templatedir="template"
 
 # Default locales of this node, used to speed up indexing
 Locales="en, en-US"

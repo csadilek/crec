@@ -12,7 +12,7 @@ import (
 
 	"github.com/blevesearch/bleve"
 	"github.com/nu7hatch/gouuid"
-	"mozilla.org/crec/config"
+	"mozilla.org/crec/app"
 )
 
 // Index responsible for indexing content
@@ -32,7 +32,7 @@ type Index struct {
 }
 
 // CreateIndex creates an index instance, using the provided file name and root directory
-func CreateIndex(c *config.Config) *Index {
+func CreateIndex(c *app.Config) *Index {
 	u, err := uuid.NewV4()
 	if err != nil {
 		log.Fatal("Failed to create index directory:", err)

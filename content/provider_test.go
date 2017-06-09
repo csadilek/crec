@@ -1,47 +1,13 @@
-package provider
+package content
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 
-	"log"
-
-	"mozilla.org/crec/config"
+	"mozilla.org/crec/app"
 )
 
-var regDir string
-
-func TestMain(m *testing.M) {
-	before()
-	retCode := m.Run()
-	tearDown()
-	os.Exit(retCode)
-}
-
-func before() {
-	regDir = filepath.FromSlash(os.TempDir() + "test-provider-registry")
-	os.Mkdir(regDir, 0777)
-
-	err := ioutil.WriteFile(filepath.FromSlash(regDir+"/p1.toml"), []byte(createProvider("p1")), 0777)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = ioutil.WriteFile(filepath.FromSlash(regDir+"/p2.toml"), []byte(createProvider("p2")), 0777)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func tearDown() {
-	err := os.RemoveAll(regDir)
-	if err != nil {
-		log.Print(err)
-	}
-}
+var providerDir string
 
 func createProvider(id string) string {
 	return "ID=\"" + id + "\"\n" +
@@ -58,7 +24,7 @@ func createProvider(id string) string {
 }
 
 func TestGetProviders(t *testing.T) {
-	config := config.CreateWithProviderDir(regDir)
+	config := app.CreateConfigWithProviderDir(providerDir)
 	providers, err := GetProviders(config)
 
 	if err != nil {

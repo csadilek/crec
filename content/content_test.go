@@ -1,6 +1,46 @@
 package content
 
-import "testing"
+import (
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"mozilla.org/crec/app"
+)
+
+func TestMain(m *testing.M) {
+	before()
+	retCode := m.Run()
+	tearDown()
+	os.Exit(retCode)
+}
+
+func before() {
+	providerDir = filepath.FromSlash(os.TempDir() + "test-provider-registry")
+	os.Mkdir(providerDir, 0777)
+
+	err := ioutil.WriteFile(filepath.FromSlash(providerDir+"/p1.toml"), []byte(createProvider("p1")), 0777)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(filepath.FromSlash(providerDir+"/p2.toml"), []byte(createProvider("p2")), 0777)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func tearDown() {
+	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	cleanUp(config, &Index{})
+	os.RemoveAll(config.GetImportQueueDir())
+
+	if providerDir != "" {
+		os.RemoveAll(providerDir)
+	}
+}
 
 func TestFilterContent(t *testing.T) {
 	content := []*Content{{ID: "0"}, {ID: "1"}, {ID: "2"}}

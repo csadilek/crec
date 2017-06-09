@@ -11,27 +11,26 @@ import (
 
 	"net/http/httptest"
 
-	"mozilla.org/crec/config"
-	"mozilla.org/crec/provider"
+	"mozilla.org/crec/app"
 )
 
 func TestIngesterReusesExistingContentOnError(t *testing.T) {
-	testIngesterReusesExistingContent(t, &provider.Provider{
+	testIngesterReusesExistingContent(t, &Provider{
 		ID:            "test",
 		ContentURL:    "invalid-url",
 		MaxContentAge: 0})
 }
 
 func TestIngesterReusesExistingContentIfNotExpired(t *testing.T) {
-	testIngesterReusesExistingContent(t, &provider.Provider{
+	testIngesterReusesExistingContent(t, &Provider{
 		ID:            "test",
 		ContentURL:    "invalid-url",
 		MaxContentAge: math.MaxInt32})
 }
 
-func testIngesterReusesExistingContent(t *testing.T, p *provider.Provider) {
-	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	providers := provider.Providers{"test": p}
+func testIngesterReusesExistingContent(t *testing.T, p *Provider) {
+	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	providers := Providers{"test": p}
 	curIndex := CreateIndex(config)
 
 	curIndex.AddItem(&Content{ID: "0", Source: "test"})
@@ -54,8 +53,8 @@ func testIngesterReusesExistingContent(t *testing.T, p *provider.Provider) {
 }
 
 func TestIngestFromQueue(t *testing.T) {
-	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	providers := provider.Providers{"test": &provider.Provider{ID: "test", Domains: map[string]float32{"d": 0.9}}}
+	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	providers := Providers{"test": &Provider{ID: "test", Domains: map[string]float32{"d": 0.9}}}
 
 	err := Enqueue(config, []byte(`[{"id":"0"}]`), "test")
 	if err != nil {
@@ -82,8 +81,8 @@ func TestIngestNative(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	p := &provider.Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
-	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	p := &Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
+	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config)
 
 	err := ingestNative(p, &http.Client{}, index)
@@ -109,8 +108,8 @@ func TestIngestSyndicationFeed(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	p := &provider.Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
-	config := config.CreateWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	p := &Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
+	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
 	index := CreateIndex(config)
 
 	err := ingestSyndicationFeed(p, &http.Client{}, index)
