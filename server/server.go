@@ -18,7 +18,7 @@ import (
 
 	"reflect"
 
-	"mozilla.org/crec/app"
+	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
 )
 
@@ -26,12 +26,12 @@ import (
 type Server struct {
 	index        unsafe.Pointer        // Index providing access to content
 	recommenders []content.Recommender // Array of configured content recommenders
-	config       *app.Config           // Reference to system config
+	config       *config.AppConfig     // Reference to system config
 	providers    content.Providers     // All configured content providers
 }
 
 // Create a new server instance
-func Create(config *app.Config, providers content.Providers, index *content.Index) *Server {
+func Create(config *config.AppConfig, providers content.Providers, index *content.Index) *Server {
 	recommenders := []content.Recommender{
 		&content.TagBasedRecommender{},
 		&content.QueryBasedRecommender{},
@@ -56,7 +56,7 @@ func (s *Server) Start() error {
 func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
 	apikey := strings.TrimSpace(strings.TrimLeft(r.Header.Get("Authorization"), "APIKEY"))
 
-	provider, err := app.VerifyKey(apikey, s.config)
+	provider, err := VerifyKey(apikey, s.config)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		return

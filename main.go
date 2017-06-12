@@ -6,9 +6,9 @@ import (
 
 	"flag"
 
-	"mozilla.org/crec/app"
-	"mozilla.org/crec/app/server"
+	"mozilla.org/crec/config"
 	"mozilla.org/crec/content"
+	"mozilla.org/crec/server"
 )
 
 // See: https://docs.google.com/document/d/1PjETbQVZpjtOGkE3sc8XrLUVpMVd02dG24uFqkO3itQ/
@@ -16,14 +16,14 @@ func main() {
 	apiKeys := flag.Bool("apiKeys", false, "Generate and print API keys for providers")
 	flag.Parse()
 
-	config := app.GetConfig()
+	config := config.Get()
 	providers, err := content.GetProviders(config)
 	if err != nil {
 		log.Fatal("Failed to read content providers from registry: ", err)
 	}
 	if *apiKeys {
 		for provider := range providers {
-			apiKey := app.GenerateKey(provider, config)
+			apiKey := server.GenerateKey(provider, config)
 			log.Printf("Found provider %v with API key: %v\n", provider, apiKey)
 		}
 	}

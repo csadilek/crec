@@ -1,4 +1,4 @@
-package app
+package config
 
 import (
 	"strconv"
@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetConfigReturnsMeaningfulDefaults(t *testing.T) {
-	want := Config{
+	want := AppConfig{
 		serverAddr:                    ":8080",
 		serverContentPath:             "/crec/content",
 		serverImportPath:              "/crec/import",
@@ -20,7 +20,7 @@ func TestGetConfigReturnsMeaningfulDefaults(t *testing.T) {
 		templateDir:                   "template",
 		locales:                       "en, en-US"}
 
-	got := GetConfig()
+	got := Get()
 
 	if want != *got {
 		t.Errorf("Expected %v, but got %v", want, *got)
@@ -42,7 +42,7 @@ func TestUnmarshalTOML(t *testing.T) {
 		"TemplateDir":                   "template",
 		"Locales":                       "en, en-US"}
 
-	want := Config{
+	want := AppConfig{
 		serverAddr:                    "_serverAddr",
 		serverContentPath:             "_serverContentPath",
 		serverImportPath:              "_serverImportPath",
@@ -56,7 +56,7 @@ func TestUnmarshalTOML(t *testing.T) {
 		templateDir:                   "template",
 		locales:                       "en, en-US"}
 
-	got := &Config{}
+	got := &AppConfig{}
 	got.UnmarshalTOML(toml)
 
 	if want != *got {
@@ -66,7 +66,7 @@ func TestUnmarshalTOML(t *testing.T) {
 }
 
 func TestGetterMethods(t *testing.T) {
-	config := Config{
+	config := AppConfig{
 		serverAddr:                    ":8080",
 		serverContentPath:             "/crec/content",
 		serverImportPath:              "/crec/import",
@@ -97,22 +97,12 @@ func TestGetterMethods(t *testing.T) {
 }
 
 func TestCreateMethods(t *testing.T) {
-	c := CreateConfigWithIndexDir("indexDir")
-	if c.fullTextIndexDir != "indexDir" {
-		t.Error("Failed to create config with index dir")
-	}
-
-	c = CreateConfigWithProviderDir("providerDir")
-	if c.providerRegistryDir != "providerDir" {
-		t.Error("Failed to create config with provider dir")
-	}
-
-	c = CreateConfigWithSecret("secret")
+	c := CreateWithSecret("secret")
 	if c.secret != "secret" {
 		t.Error("Failed to create config with secret")
 	}
 
-	c = CreateConfig("secret", "templateDir", "importQueueDir", "indexDir", "indexFile")
+	c = Create("secret", "templateDir", "importQueueDir", "indexDir", "indexFile")
 	if c.secret != "secret" {
 		t.Error("Failed to create config with secret")
 	}

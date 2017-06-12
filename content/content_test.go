@@ -6,8 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"mozilla.org/crec/app"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -15,6 +14,30 @@ func TestMain(m *testing.M) {
 	retCode := m.Run()
 	tearDown()
 	os.Exit(retCode)
+}
+
+type TestConfig struct{}
+
+func (t *TestConfig) GetFullTextIndexDir() string {
+	return filepath.FromSlash(os.TempDir() + "/crec-test-index")
+}
+func (t *TestConfig) GetFullTextIndexFile() string {
+	return "test_crec.bleve"
+}
+func (t *TestConfig) GetImportQueueDir() string {
+	return "import"
+}
+func (t *TestConfig) GetIndexRefreshInterval() time.Duration {
+	return time.Minute * time.Duration(int64(5))
+}
+func (t *TestConfig) FullTextIndexActive() bool {
+	return true
+}
+func (t *TestConfig) GetLocales() string {
+	return ""
+}
+func (t *TestConfig) GetProviderRegistryDir() string {
+	return providerDir
 }
 
 func before() {
@@ -33,7 +56,7 @@ func before() {
 }
 
 func tearDown() {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	config := &TestConfig{}
 	cleanUp(config, &Index{})
 	os.RemoveAll(config.GetImportQueueDir())
 

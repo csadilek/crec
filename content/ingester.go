@@ -11,7 +11,6 @@ import (
 
 	"github.com/jaytaylor/html2text"
 	"github.com/mmcdole/gofeed"
-	"mozilla.org/crec/app"
 
 	"log"
 
@@ -24,7 +23,7 @@ import (
 )
 
 // Ingest content from configured providers
-func Ingest(config *app.Config, providers Providers, curIndex *Index) *Index {
+func Ingest(config Config, providers Providers, curIndex *Index) *Index {
 	cleanUp(config, curIndex)
 
 	index := CreateIndex(config)
@@ -68,7 +67,7 @@ func Ingest(config *app.Config, providers Providers, curIndex *Index) *Index {
 }
 
 // Enqueue writes content to the disc to be ingested in the next indexing iteration
-func Enqueue(config *app.Config, content []byte, provider string) error {
+func Enqueue(config Config, content []byte, provider string) error {
 	path := filepath.Join(config.GetImportQueueDir(), provider)
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
@@ -83,7 +82,7 @@ func Enqueue(config *app.Config, content []byte, provider string) error {
 }
 
 // cleanUp deletes all but the current active index
-func cleanUp(config *app.Config, curIndex *Index) {
+func cleanUp(config Config, curIndex *Index) {
 	indexDirs, _ := ioutil.ReadDir(config.GetFullTextIndexDir())
 	for _, indexDir := range indexDirs {
 		if indexDir.Name() != curIndex.GetID() {
@@ -106,7 +105,7 @@ func ingestFromProvider(provider *Provider, index *Index) error {
 	return err
 }
 
-func ingestFromQueue(config *app.Config, provider *Provider, index *Index) error {
+func ingestFromQueue(config Config, provider *Provider, index *Index) error {
 	path := filepath.Join(config.GetImportQueueDir(), provider.ID)
 	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info != nil && !info.IsDir() {

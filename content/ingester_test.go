@@ -3,15 +3,11 @@ package content
 import (
 	"fmt"
 	"math"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"net/http"
 
 	"net/http/httptest"
-
-	"mozilla.org/crec/app"
 )
 
 func TestIngesterReusesExistingContentOnError(t *testing.T) {
@@ -29,7 +25,7 @@ func TestIngesterReusesExistingContentIfNotExpired(t *testing.T) {
 }
 
 func testIngesterReusesExistingContent(t *testing.T, p *Provider) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	config := &TestConfig{}
 	providers := Providers{"test": p}
 	curIndex := CreateIndex(config)
 
@@ -53,7 +49,7 @@ func testIngesterReusesExistingContent(t *testing.T, p *Provider) {
 }
 
 func TestIngestFromQueue(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
+	config := &TestConfig{}
 	providers := Providers{"test": &Provider{ID: "test", Domains: map[string]float32{"d": 0.9}}}
 
 	err := Enqueue(config, []byte(`[{"id":"0"}]`), "test")
@@ -82,8 +78,7 @@ func TestIngestNative(t *testing.T) {
 	defer ts.Close()
 
 	p := &Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 
 	err := ingestNative(p, &http.Client{}, index)
 	if err != nil {
@@ -109,8 +104,7 @@ func TestIngestSyndicationFeed(t *testing.T) {
 	defer ts.Close()
 
 	p := &Provider{ID: "test", ContentURL: ts.URL, Domains: map[string]float32{"d": 0.9}}
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 
 	err := ingestSyndicationFeed(p, &http.Client{}, index)
 	if err != nil {

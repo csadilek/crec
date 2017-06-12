@@ -3,6 +3,7 @@ package content
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Content represents our unified data model abstracting from the various formats used by providers.
@@ -58,6 +59,17 @@ type Content struct {
 
 func (c *Content) String() string {
 	return fmt.Sprintf("Source: %s: Title: %s", c.Source, c.Title)
+}
+
+// Config contract for objects holding all content-related settings
+type Config interface {
+	GetFullTextIndexDir() string
+	GetFullTextIndexFile() string
+	GetImportQueueDir() string
+	GetIndexRefreshInterval() time.Duration
+	GetLocales() string
+	GetProviderRegistryDir() string
+	FullTextIndexActive() bool
 }
 
 // Filter content using the provided predicate function

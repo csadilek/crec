@@ -1,16 +1,11 @@
 package content
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
-
-	"mozilla.org/crec/app"
 )
 
 func TestGetID(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 	id := index.GetID()
 	if id == "" {
 		t.Error("Index does not have a unique id")
@@ -18,8 +13,7 @@ func TestGetID(t *testing.T) {
 }
 
 func TestGetContent(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 	err := index.AddItem(&Content{ID: "0", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
@@ -31,8 +25,7 @@ func TestGetContent(t *testing.T) {
 }
 
 func TestAddAndQueryContent(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 	err := index.AddItem(&Content{ID: "0", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
@@ -47,8 +40,7 @@ func TestAddAndQueryContent(t *testing.T) {
 }
 
 func TestAddAndQueryTitle(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 	err := index.AddItem(&Content{ID: "0", Title: "a title", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
@@ -63,8 +55,7 @@ func TestAddAndQueryTitle(t *testing.T) {
 }
 
 func TestAddAll(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 	err := index.Add([]*Content{
 		&Content{ID: "0", Summary: "a summary"},
 		&Content{ID: "1", Summary: "a summary"}})
@@ -82,8 +73,7 @@ func TestAddAll(t *testing.T) {
 }
 
 func TestGetLocalizedContent(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 	err := index.AddItem(&Content{ID: "0", Title: "Any", Summary: "a summary"})
 	if err != nil {
 		t.Fatal(err)
@@ -124,8 +114,7 @@ func TestGetLocalizedContent(t *testing.T) {
 }
 
 func TestGetTaggedContent(t *testing.T) {
-	config := app.CreateConfigWithIndexDir(filepath.FromSlash(os.TempDir() + "/crec-test-index"))
-	index := CreateIndex(config)
+	index := CreateIndex(&TestConfig{})
 	err := index.Add([]*Content{
 		&Content{ID: "0", Tags: []string{"t1"}, Summary: "a summary"},
 		&Content{ID: "1", Tags: []string{"t2"}, Summary: "a summary"}})

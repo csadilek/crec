@@ -1,4 +1,4 @@
-package app
+package config
 
 import (
 	"io/ioutil"
@@ -13,8 +13,8 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// Config holds all system-wide settings
-type Config struct {
+// AppConfig holds all application-wide settings
+type AppConfig struct {
 	secret                        string
 	serverAddr                    string
 	serverContentPath             string
@@ -32,7 +32,7 @@ type Config struct {
 
 // UnmarshalTOML provides a custom "unmarshaller" so we can keep our fields
 // private/immutable from outside this package
-func (c *Config) UnmarshalTOML(data interface{}) error {
+func (c *AppConfig) UnmarshalTOML(data interface{}) error {
 	d := data.(map[string]interface{})
 	// EEEK: https://github.com/golang/go/issues/19752
 	c.maybeUpdateConfig(d, "Secret", func(val interface{}) { c.secret = val.(string) })
@@ -51,16 +51,16 @@ func (c *Config) UnmarshalTOML(data interface{}) error {
 	return nil
 }
 
-func (c *Config) maybeUpdateConfig(data map[string]interface{}, name string, updater func(interface{})) {
+func (c *AppConfig) maybeUpdateConfig(data map[string]interface{}, name string, updater func(interface{})) {
 	if val, ok := data[name]; ok {
 		updater(val)
 	}
 }
 
-// GetConfig returns the configuration based on config.toml, if present.
+// Get returns the configuration based on config.toml, if present.
 // Default values are provided for all keys not present, except Secret.
-func GetConfig() *Config {
-	c := &Config{
+func Get() *AppConfig {
+	c := &AppConfig{
 		serverAddr:                    ":8080",
 		serverContentPath:             "/crec/content",
 		serverImportPath:              "/crec/import",
@@ -93,75 +93,75 @@ func GetConfig() *Config {
 }
 
 // GetAddr returns the address and port for starting up the server .e.g :8080
-func (c *Config) GetAddr() string {
+func (c *AppConfig) GetAddr() string {
 	return c.serverAddr
 }
 
 // GetContentPath returns the URL path to handle content requests e.g. /crec/content
-func (c *Config) GetContentPath() string {
+func (c *AppConfig) GetContentPath() string {
 	return c.serverContentPath
 }
 
 // GetImportPath returns the URL path to handle import requests e.g. /crec/import
-func (c *Config) GetImportPath() string {
+func (c *AppConfig) GetImportPath() string {
 	return c.serverImportPath
 }
 
 // GetImportQueueDir returns the directory path to store imported content e.g. import
-func (c *Config) GetImportQueueDir() string {
+func (c *AppConfig) GetImportQueueDir() string {
 	return c.importQueueDir
 }
 
 // FullTextIndexActive returns true if a full-text index should be created, otherwise false.
-func (c *Config) FullTextIndexActive() bool {
+func (c *AppConfig) FullTextIndexActive() bool {
 	return c.fullTextIndex
 }
 
 // GetFullTextIndexDir returns the directory path to store indexes e.g. index
-func (c *Config) GetFullTextIndexDir() string {
+func (c *AppConfig) GetFullTextIndexDir() string {
 	return c.fullTextIndexDir
 }
 
 // GetFullTextIndexFile returns the path to store the index e.g. crec.bleve
-func (c *Config) GetFullTextIndexFile() string {
+func (c *AppConfig) GetFullTextIndexFile() string {
 	return c.fullTextIndexFile
 }
 
 // GetProviderRegistryDir returns the directy path containing provider configurations e.g. provider-registry
-func (c *Config) GetProviderRegistryDir() string {
+func (c *AppConfig) GetProviderRegistryDir() string {
 	return c.providerRegistryDir
 }
 
 // GetSecret returns the configured secret to generate API keys
-func (c *Config) GetSecret() string {
+func (c *AppConfig) GetSecret() string {
 	return c.secret
 }
 
 // GetIndexRefreshInterval returns the configured refresh interval for the content index
-func (c *Config) GetIndexRefreshInterval() time.Duration {
+func (c *AppConfig) GetIndexRefreshInterval() time.Duration {
 	return time.Minute * time.Duration(int64(c.indexRefreshIntervalInMinutes))
 }
 
 // GetClientCacheMaxAge returns the configured cache control max age
-func (c *Config) GetClientCacheMaxAge() string {
+func (c *AppConfig) GetClientCacheMaxAge() string {
 	return strconv.Itoa(int(c.clientCacheMaxAgeInSeconds))
 }
 
 // GetTemplateDir returns the configured html template directory
-func (c *Config) GetTemplateDir() string {
+func (c *AppConfig) GetTemplateDir() string {
 	return c.templateDir
 }
 
 // GetLocales returns the configured default locales of this node
-func (c *Config) GetLocales() string {
+func (c *AppConfig) GetLocales() string {
 	return c.locales
 }
 
-// CreateConfig returns a config instance with the provided parameters
-func CreateConfig(secret string, templateDir string, importQueueDir string,
-	fullTextIndexDir string, fullTextIndexFile string) *Config {
+// Create returns a config instance with the provided parameters
+func Create(secret string, templateDir string, importQueueDir string,
+	fullTextIndexDir string, fullTextIndexFile string) *AppConfig {
 
-	config := GetConfig()
+	config := Get()
 	config.secret = secret
 	config.templateDir = templateDir
 	config.importQueueDir = importQueueDir
@@ -170,23 +170,9 @@ func CreateConfig(secret string, templateDir string, importQueueDir string,
 	return config
 }
 
-// CreateConfigWithSecret returns a config instance with the provided secret
-func CreateConfigWithSecret(secret string) *Config {
-	config := GetConfig()
+// CreateWithSecret returns a config instance with the provided secret
+func CreateWithSecret(secret string) *AppConfig {
+	config := Get()
 	config.secret = secret
-	return config
-}
-
-// CreateConfigWithIndexDir returns a config instance with the provided index dir
-func CreateConfigWithIndexDir(indexDir string) *Config {
-	config := GetConfig()
-	config.fullTextIndexDir = indexDir
-	return config
-}
-
-// CreateConfigWithProviderDir returns a config instance with the given provider dir
-func CreateConfigWithProviderDir(providerDir string) *Config {
-	config := GetConfig()
-	config.providerRegistryDir = providerDir
 	return config
 }

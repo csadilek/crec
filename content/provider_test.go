@@ -3,8 +3,6 @@ package content
 import (
 	"reflect"
 	"testing"
-
-	"mozilla.org/crec/app"
 )
 
 var providerDir string
@@ -24,8 +22,7 @@ func createProvider(id string) string {
 }
 
 func TestGetProviders(t *testing.T) {
-	config := app.CreateConfigWithProviderDir(providerDir)
-	providers, err := GetProviders(config)
+	providers, err := GetProviders(&TestConfig{})
 
 	if err != nil {
 		t.Fatal(err)

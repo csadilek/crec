@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-	"mozilla.org/crec/app"
 	"mozilla.org/crec/content/processor"
 )
 
@@ -64,11 +63,11 @@ type Provider struct {
 	Domains map[string]float32
 }
 
-// Providers is a mapping of provider ID to instance
+// Providers is a mapping of provider IDs to instances
 type Providers map[string]*Provider
 
 // GetProviders returns all registered content providers
-func GetProviders(config *app.Config) (Providers, error) {
+func GetProviders(config Config) (Providers, error) {
 	return readProvidersFromRegistry(config.GetProviderRegistryDir())
 }
 

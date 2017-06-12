@@ -1,11 +1,13 @@
-package app
+package server
 
 import (
 	"testing"
+
+	"mozilla.org/crec/config"
 )
 
 func TestAPIKeyGen(t *testing.T) {
-	config := CreateConfigWithSecret("testing-secret-0")
+	config := config.CreateWithSecret("testing-secret-0")
 	want := "test-provider"
 
 	apikey := GenerateKey(want, config)

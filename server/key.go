@@ -1,4 +1,4 @@
-package app
+package server
 
 import (
 	"crypto/aes"
@@ -8,13 +8,15 @@ import (
 	"io"
 	"strings"
 
+	"mozilla.org/crec/config"
+
 	"log"
 
 	"errors"
 )
 
 // GenerateKey returns a consumer (API) key for the given provider
-func GenerateKey(provider string, config *Config) string {
+func GenerateKey(provider string, config *config.AppConfig) string {
 	plaintext := []byte(provider)
 
 	block, err := aes.NewCipher([]byte(config.GetSecret()))
@@ -34,7 +36,7 @@ func GenerateKey(provider string, config *Config) string {
 
 // VerifyKey returns the provider the key was generated for, or an error
 // if verification failed.
-func VerifyKey(key string, config *Config) (string, error) {
+func VerifyKey(key string, config *config.AppConfig) (string, error) {
 	if len(key) < aes.BlockSize {
 		return "", errors.New("Invalid key length")
 	}
