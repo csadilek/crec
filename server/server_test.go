@@ -204,4 +204,14 @@ func TestCacheHeadersOmittedIfRecommenderFailing(t *testing.T) {
 	if recorder.Header().Get("Cache-Control") != "" {
 		t.Errorf("Expected Cache-Control header to be empty")
 	}
+
+	server.recommenders = make([]content.Recommender, 0)
+}
+
+func BenchmarkHandleContent(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest("GET", server.config.GetContentPath()+"?t=t1&q=q1&p=p1", nil)
+		server.handleContent(recorder, request)
+	}
 }

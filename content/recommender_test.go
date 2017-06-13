@@ -57,6 +57,23 @@ func TestTagBasedRecommender(t *testing.T) {
 	}
 }
 
+func BenchmarkTagBasedRecommender(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		index := createIndexWithID("test")
+		index.Add([]*Content{{ID: "0", Tags: []string{"t1", "t2"}}, {ID: "1", Tags: []string{"t3"}}})
+
+		recommender := TagBasedRecommender{}
+
+		recs, err := recommender.Recommend(index, map[string]interface{}{"tags": "t1 t3", "lang": ""})
+		if err != nil {
+			b.Fatal(err)
+		}
+		if len(recs) != 0 {
+			b.Error("Should not have found a recommendation")
+		}
+	}
+}
+
 func TestProviderBasedRecommender(t *testing.T) {
 	index := createIndexWithID("test")
 	index.Add([]*Content{{ID: "1", Source: "p1"}, {ID: "2", Source: "p2"}})
