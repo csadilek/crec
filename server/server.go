@@ -22,12 +22,16 @@ import (
 	"mozilla.org/crec/content"
 )
 
-// Server to host public API for content consumption
+// Server to host public API for importing and consuming content
 type Server struct {
-	index        unsafe.Pointer        // Index providing access to content
-	recommenders []content.Recommender // Array of configured content recommenders
-	config       *config.AppConfig     // Reference to system config
-	providers    content.Providers     // All configured content providers
+	// Index providing access to content, using an unsafe.Pointer to allow for atomic reference swaps
+	index unsafe.Pointer
+	// Array of configured content recommenders
+	recommenders []content.Recommender
+	// Reference to system config
+	config *config.AppConfig
+	// All configured content providers
+	providers content.Providers
 }
 
 // Create a new server instance
@@ -47,7 +51,7 @@ func Create(config *config.AppConfig, providers content.Providers, index *conten
 	return &s
 }
 
-// Start a server which provides an API for content consumption
+// Start a server to provide an API for importing and consuming content
 func (s *Server) Start() error {
 	log.Printf("Server listening at %s\n", s.config.GetAddr())
 	return http.ListenAndServe(s.config.GetAddr(), nil)
@@ -164,7 +168,7 @@ func (s *Server) respondWithJSON(w http.ResponseWriter, recs content.Recommendat
 	w.Write(bytes)
 }
 
-//SetIndex atomically updates the server's index to reflect updated content
+// SetIndex atomically updates the server's index to reflect updated content
 func (s *Server) SetIndex(index *content.Index) {
 	atomic.StorePointer(&s.index, unsafe.Pointer(index))
 }

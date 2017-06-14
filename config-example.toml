@@ -18,7 +18,7 @@ ServerImportPath="/crec/import"
 # Directory to store imported content
 ImportQueueDir="import"
 
-# Wheter or not a full-text index should be created
+# Whether or not a full-text index should be created
 FullTextIndex=true
 
 # Directory to store full-text index
