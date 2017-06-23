@@ -39,7 +39,8 @@ func Create(config *config.AppConfig, providers content.Providers, index *conten
 	recommenders := []content.Recommender{
 		&content.TagBasedRecommender{},
 		&content.QueryBasedRecommender{},
-		&content.ProviderBasedRecommender{}}
+		&content.ProviderBasedRecommender{},
+		&content.LocaleBasedRecommender{}}
 
 	s := Server{index: unsafe.Pointer(index),
 		recommenders: recommenders,
@@ -122,9 +123,11 @@ func (s *Server) handleContent(w http.ResponseWriter, req *http.Request) {
 func (s *Server) produceRecommendations(r *http.Request, index *content.Index) (content.Recommendations, bool) {
 	params := make(map[string]interface{})
 	params["lang"] = r.Header.Get("Accept-Language")
+
 	params["tags"] = r.URL.Query().Get("t")
 	params["query"] = r.URL.Query().Get("q")
 	params["provider"] = r.URL.Query().Get("p")
+	params["locale"] = r.URL.Query().Get("l")
 
 	recs := make(content.Recommendations, 0)
 	cDedupe := make(map[string]bool)

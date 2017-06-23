@@ -91,6 +91,48 @@ func TestProviderBasedRecommender(t *testing.T) {
 	}
 }
 
+func TestLocaleBasedRecommender(t *testing.T) {
+	index := createIndexWithID("test")
+	index.Add([]*Content{{ID: "1", Language: "de"}, {ID: "2", Language: "de", Regions: []string{"AT"}}})
+
+	recommender := &LocaleBasedRecommender{}
+
+	content, err := recommender.Recommend(index, map[string]interface{}{"locale": "en"})
+	if err != nil {
+		t.Fatal("Failed to compute recommendations for provider", err)
+	}
+	if len(content) != 0 {
+		t.Errorf("Expected content of length 0, but got %v", len(content))
+	}
+
+	content, err = recommender.Recommend(index, map[string]interface{}{"locale": "de"})
+	if err != nil {
+		t.Fatal("Failed to compute recommendations for provider", err)
+	}
+	if len(content) != 1 {
+		// Won't get de-AT content as it's restricted to AT
+		t.Errorf("Expected content of length 1, but got %v", len(content))
+	}
+	if content[0].ID != "1" {
+		t.Errorf("Expected content relevant to de, but got: %v", content[0])
+	}
+
+	content, err = recommender.Recommend(index, map[string]interface{}{"locale": "de-AT"})
+	if err != nil {
+		t.Fatal("Failed to compute recommendations for provider", err)
+	}
+	if len(content) != 2 {
+		t.Errorf("Expected content of length 2, but got %v", len(content))
+	}
+	if content[0].ID != "1" {
+		t.Errorf("Expected content relevant to de-AT, but got: %v", content[0])
+	}
+	if content[1].ID != "2" {
+		// "de" content does not provide a region and is therefore relevant to all "de" regions incl. AT
+		t.Errorf("Expected content relevant to de-AT, but got: %v", content[1])
+	}
+}
+
 func TestQueryBasedRecommender(t *testing.T) {
 	index := createIndexWithID("test")
 	recommender := &QueryBasedRecommender{}

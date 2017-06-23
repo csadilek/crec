@@ -79,3 +79,17 @@ func (r *ProviderBasedRecommender) Recommend(index *Index, params map[string]int
 
 	return []*Content{}, nil
 }
+
+// LocaleBasedRecommender recommends content based on the provide locale string e.g. at-DE
+type LocaleBasedRecommender struct {
+}
+
+// Recommend content for the given locale
+func (r *LocaleBasedRecommender) Recommend(index *Index, params map[string]interface{}) (Recommendations, error) {
+	locale := params["locale"].(string)
+	if locale != "" {
+		return index.GetLocalizedContent(locale), nil
+	}
+
+	return []*Content{}, nil
+}
