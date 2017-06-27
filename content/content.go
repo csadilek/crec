@@ -6,6 +6,18 @@ import (
 	"time"
 )
 
+// Type allows labelling content for client-side display (e.g. ordering) purposes
+type Type string
+
+const (
+	// RECOMMENDED is the default content type
+	RECOMMENDED Type = "recommended"
+	// PROMOTED indicates content which is boosted based on popularity
+	PROMOTED Type = "promoted"
+	// SPONSORED indicates partner content
+	SPONSORED Type = "sponsored"
+)
+
 // Content represents our unified data model abstracting from the various formats used by providers.
 type Content struct {
 	// Globally unique content identifier
@@ -55,6 +67,9 @@ type Content struct {
 	// to map content to specific user interests i.e. based on
 	// their browsing history.
 	Domains map[string]float32 `json:"domains,omitempty"`
+
+	// Specifies the content type
+	CType Type `json:"type,omitempty"`
 }
 
 func (c *Content) String() string {

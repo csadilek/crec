@@ -213,7 +213,8 @@ func createContentFromFeedItem(provider *Provider, item *gofeed.Item) (*Content,
 		Regions:   provider.Regions,
 		Language:  provider.Language,
 		Script:    provider.Script,
-		Domains:   provider.Domains}
+		Domains:   provider.Domains,
+		CType:     RECOMMENDED}
 	return maybeAppendExplanation(newc), nil
 }
 

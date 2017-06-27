@@ -121,4 +121,7 @@ func TestIngestSyndicationFeed(t *testing.T) {
 	if content[0].Domains["d"] != 0.9 {
 		t.Errorf("Expected provider domains to be present in content")
 	}
+	if content[0].CType != RECOMMENDED {
+		t.Errorf("Expected content type to be RECOMMENDED, but got %v", content[0].CType)
+	}
 }
