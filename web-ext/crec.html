@@ -4,26 +4,26 @@
         <script src="jquery-3.2.0.min.js"></script>
         <script src="jquery.loadTemplate.min.js"></script>
         <script src="crec.js"></script>
-        <link rel="stylesheet" type="text/css" href="css/crec.css"> 
-              
-        <script type="text/html" id="template">            
-            <img class="image" data-src="image" data-alt="title" data-link-wrap="link"/>
+        <link rel="stylesheet" type="text/css" href="css/crec.css">
+
+        <script type="text/html" id="template">
+            <img class="image" data-src="image_src" data-alt="title" data-link-wrap="link"/>
             <h3 class="title" data-content="title"></h3>
-            <p data-content="summary"></p>            
+            <p data-content="excerpt"></p>
         </script>
 
     </head>
     <body>
         <div id="settings"><div></div><div></div><button id="settings-button" class="settings-hover-off"></div>
-        
+
         <div id="newtab-search-form">
             <div id="newtab-search-icon"></div>
-            <input name="q" value="" id="newtab-search-text" aria-label="Search query" maxlength="256" 
-                autocomplete="off" aria-autocomplete="true" aria-controls="searchSuggestionTable" 
+            <input name="q" value="" id="newtab-search-text" aria-label="Search query" maxlength="256"
+                autocomplete="off" aria-autocomplete="true" aria-controls="searchSuggestionTable"
                 aria-expanded="false" placeholder="Search" type="text" />
-            <input id="newtab-search-submit" title="Submit search" class="submit-hover-off" value="▶" type="button" />        
-        </div>        
-        
+            <input id="newtab-search-submit" title="Submit search" class="submit-hover-off" value="▶" type="button" />
+        </div>
+
         <div id="content" class="content"></div>
     </body>
 </html>

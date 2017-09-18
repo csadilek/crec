@@ -93,7 +93,7 @@ func TestHandleContentProcessesAcceptHeaders(t *testing.T) {
 }
 func TestHandleContentProducesRecommendations(t *testing.T) {
 	index.AddItem(&content.Content{ID: "0", Tags: []string{"t1"}})
-	index.AddItem(&content.Content{ID: "1", Summary: "q1"})
+	index.AddItem(&content.Content{ID: "1", Excerpt: "q1"})
 	index.AddItem(&content.Content{ID: "2", Source: "p1"})
 
 	recorder := httptest.NewRecorder()
@@ -105,12 +105,13 @@ func TestHandleContentProducesRecommendations(t *testing.T) {
 		t.Errorf("Expected 200 (OK), but got %v", recorder.Code)
 	}
 
-	content := make([]content.Content, 0)
-	err := json.Unmarshal(recorder.Body.Bytes(), &content)
+	response := JSONResponse{}
+	err := json.Unmarshal(recorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Error(err)
 	}
 
+	content := response.Recs
 	if len(content) != 3 {
 		t.Errorf("Expected exactly 3 recommendations, but got %v", len(content))
 	}
@@ -122,9 +123,9 @@ func TestHandleContentProducesRecommendations(t *testing.T) {
 	}
 }
 func TestHandleContentProducesUniqueRecommendations(t *testing.T) {
-	index.AddItem(&content.Content{ID: "0", Tags: []string{"t1"}, Summary: "q1"})
-	index.AddItem(&content.Content{ID: "1", Summary: "q1"})
-	index.AddItem(&content.Content{ID: "2", Source: "p1", Summary: "q1"})
+	index.AddItem(&content.Content{ID: "0", Tags: []string{"t1"}, Excerpt: "q1"})
+	index.AddItem(&content.Content{ID: "1", Excerpt: "q1"})
+	index.AddItem(&content.Content{ID: "2", Source: "p1", Excerpt: "q1"})
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest("GET", server.config.GetContentPath()+"?t=t1&q=q1&p=p1", nil)
@@ -135,12 +136,13 @@ func TestHandleContentProducesUniqueRecommendations(t *testing.T) {
 		t.Errorf("Expected 200 (OK), but got %v", recorder.Code)
 	}
 
-	content := make([]content.Content, 0)
-	err := json.Unmarshal(recorder.Body.Bytes(), &content)
+	response := JSONResponse{}
+	err := json.Unmarshal(recorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Error(err)
 	}
 
+	content := response.Recs
 	if len(content) != 3 {
 		t.Errorf("Expected exactly 3 recommendations, but got %v", len(content))
 	}

@@ -34,6 +34,11 @@ type Server struct {
 	providers content.Providers
 }
 
+// JSONResponse wraps content recommendations as a JSON object
+type JSONResponse struct {
+	Recs content.Recommendations `json:"recommendations"`
+}
+
 // Create a new server instance
 func Create(config *config.AppConfig, providers content.Providers, index *content.Index) *Server {
 	recommenders := []content.Recommender{
@@ -163,7 +168,7 @@ func (s *Server) respondWithHTML(w http.ResponseWriter, recs content.Recommendat
 }
 
 func (s *Server) respondWithJSON(w http.ResponseWriter, recs content.Recommendations) {
-	bytes, err := json.Marshal(recs)
+	bytes, err := json.Marshal(JSONResponse{Recs: recs})
 	if err != nil {
 		log.Fatal("Failed to marshal content to JSON: ", err)
 	}

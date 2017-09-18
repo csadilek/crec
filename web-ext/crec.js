@@ -7,14 +7,14 @@ browser.runtime.sendMessage({msg: "getConfig"})
                 Accept: "application/json; charset=utf-8"
             }
         })
-        .then(function(data) {            
+        .then(function(data) {
             var index = 0;
             data.map(function(o) {
                 $("<div " +"id=\"" + index + "\"" + " class=\"newtab-cell\"/>")
                     .loadTemplate("#template", o)
-                    .appendTo("#content");                    
+                    .appendTo("#content");
                 $("#" + index++).click(function() {
-                    window.open(o.link, '_blank');
+                    window.open(o.url, '_blank');
                 });
             });
         }, function() {
@@ -24,7 +24,7 @@ browser.runtime.sendMessage({msg: "getConfig"})
             $('.newtab-cell').mouseover(function(){
                 $(this).addClass('hover');
             });
-        
+
             $('.newtab-cell').mouseout(function(){
                 $(this).removeClass('hover');
             });
@@ -41,13 +41,13 @@ browser.runtime.sendMessage({msg: "getConfig"})
                 browser.runtime.openOptionsPage();
             });
 
-            $('#newtab-search-submit').mouseover(function(){            
+            $('#newtab-search-submit').mouseover(function(){
                 $(this).addClass('submit-hover');
             });
-            
+
             $('#newtab-search-submit').mouseout(function(){
                 $(this).removeClass('submit-hover');
             });
-            
+
         });
 });

@@ -121,7 +121,7 @@ func (i *Index) AddItem(c *Content) error {
 
 	// Add to full-text index
 	if i.fullText != nil {
-		return i.fullText.Index(c.ID, c.Title+" "+c.Summary)
+		return i.fullText.Index(c.ID, c.Title+" "+c.Excerpt)
 	}
 
 	return nil

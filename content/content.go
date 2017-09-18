@@ -29,14 +29,14 @@ type Content struct {
 	// Title provided for this content
 	Title string `json:"title,omitempty"`
 
-	// Link to a web site showing a detailed view of the content
-	Link string `json:"link,omitempty"`
+	// URL to a web site showing a detailed view of the content
+	URL string `json:"url,omitempty"`
 
 	// Image URI to a preview image
-	Image string `json:"image,omitempty"`
+	Image string `json:"image_src,omitempty"`
 
-	// Summary of the content
-	Summary string `json:"summary,omitempty"`
+	// Excerpt of the content
+	Excerpt string `json:"excerpt,omitempty"`
 
 	// HTML view of the content
 	HTML string `json:"-"`
@@ -48,7 +48,7 @@ type Content struct {
 	Author string `json:"author,omitempty"`
 
 	// Publication date
-	Published string `json:"published,omitempty"`
+	Published string `json:"published_timestamp,omitempty"`
 
 	// Tags and categories applied to this content
 	Tags []string `json:"tags,omitempty"`
@@ -66,7 +66,7 @@ type Content struct {
 	// name is used as key, the weight as value. This can be used
 	// to map content to specific user interests i.e. based on
 	// their browsing history.
-	Domains map[string]float32 `json:"domains,omitempty"`
+	Domains map[string]float32 `json:"domain_affinities,omitempty"`
 
 	// Specifies the content type
 	CType Type `json:"type,omitempty"`

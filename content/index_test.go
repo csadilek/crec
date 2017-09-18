@@ -14,7 +14,7 @@ func TestGetID(t *testing.T) {
 
 func TestGetContent(t *testing.T) {
 	index := CreateIndex(&TestConfig{})
-	err := index.AddItem(&Content{ID: "0", Summary: "a summary"})
+	err := index.AddItem(&Content{ID: "0", Excerpt: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestGetContent(t *testing.T) {
 
 func TestAddAndQueryContent(t *testing.T) {
 	index := CreateIndex(&TestConfig{})
-	err := index.AddItem(&Content{ID: "0", Summary: "a summary"})
+	err := index.AddItem(&Content{ID: "0", Excerpt: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func TestAddAndQueryContent(t *testing.T) {
 
 func TestAddAndQueryTitle(t *testing.T) {
 	index := CreateIndex(&TestConfig{})
-	err := index.AddItem(&Content{ID: "0", Title: "a title", Summary: "a summary"})
+	err := index.AddItem(&Content{ID: "0", Title: "a title", Excerpt: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,8 +57,8 @@ func TestAddAndQueryTitle(t *testing.T) {
 func TestAddAll(t *testing.T) {
 	index := CreateIndex(&TestConfig{})
 	err := index.Add([]*Content{
-		&Content{ID: "0", Summary: "a summary"},
-		&Content{ID: "1", Summary: "a summary"}})
+		&Content{ID: "0", Excerpt: "a summary"},
+		&Content{ID: "1", Excerpt: "a summary"}})
 
 	if err != nil {
 		t.Fatal(err)
@@ -74,14 +74,14 @@ func TestAddAll(t *testing.T) {
 
 func TestGetLocalizedContent(t *testing.T) {
 	index := CreateIndex(&TestConfig{})
-	err := index.AddItem(&Content{ID: "0", Title: "Any", Summary: "a summary"})
+	err := index.AddItem(&Content{ID: "0", Title: "Any", Excerpt: "a summary"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	err = index.AddItem(&Content{
 		ID:       "1",
 		Title:    "de-at",
-		Summary:  "eine kurzfassung",
+		Excerpt:  "eine kurzfassung",
 		Language: "de",
 		Regions:  []string{"AT"}})
 	if err != nil {
@@ -116,8 +116,8 @@ func TestGetLocalizedContent(t *testing.T) {
 func TestGetTaggedContent(t *testing.T) {
 	index := CreateIndex(&TestConfig{})
 	err := index.Add([]*Content{
-		&Content{ID: "0", Tags: []string{"t1"}, Summary: "a summary"},
-		&Content{ID: "1", Tags: []string{"t2"}, Summary: "a summary"}})
+		&Content{ID: "0", Tags: []string{"t1"}, Excerpt: "a summary"},
+		&Content{ID: "1", Tags: []string{"t2"}, Excerpt: "a summary"}})
 
 	if err != nil {
 		t.Fatal(err)
